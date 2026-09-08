@@ -27,8 +27,6 @@ function loadClassicScript(src) {
 async function boot() {
   const configPromise = loadRuntimeConfig();
 
-  // Mantém a experiência existente isolada durante a migração, mas garante
-  // que a configuração publicada seja aplicada depois que os globais existirem.
   await loadClassicScript("/assets/js/game-legacy.js");
   legacyLoaded = true;
 
@@ -38,12 +36,14 @@ async function boot() {
   const { applyLegacyGameConfig } = await import("/assets/js/game-config-adapter.js");
   applyLegacyGameConfig(config);
 
+  const { initRanking } = await import("/assets/js/ranking.js?v=20260908-1");
+  initRanking();
+
   window.dispatchEvent(new CustomEvent("circoray:config-ready", { detail: config }));
 }
 
 boot().catch((error) => {
   console.error("Falha ao iniciar CircoRay:", error);
-  // Se apenas a configuração falhar, não executamos a lógica legada duas vezes.
   if (!legacyLoaded && !window.__circorayLegacyFallbackLoaded) {
     window.__circorayLegacyFallbackLoaded = true;
     loadClassicScript("/assets/js/game-legacy.js").catch(console.error);
