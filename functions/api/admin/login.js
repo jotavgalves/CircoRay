@@ -1,4 +1,4 @@
-import { createSessionCookie, isPasswordValid, json } from "../../_shared/auth.js";
+import { createSessionCookie, createSessionToken, isPasswordValid, json } from "../../_shared/auth.js";
 
 const WINDOW_SECONDS = 15 * 60;
 const MAX_FAILURES = 8;
@@ -56,6 +56,7 @@ export async function onRequestPost({ request, env }) {
 
   if (hasKv && key) await env.CONFIG_KV.delete(key);
 
+  const token = await createSessionToken(env.SESSION_SECRET);
   const cookie = await createSessionCookie(env.SESSION_SECRET);
-  return json({ ok: true, storageReady: hasKv }, 200, { "Set-Cookie": cookie });
+  return json({ ok: true, token, storageReady: hasKv }, 200, { "Set-Cookie": cookie });
 }
