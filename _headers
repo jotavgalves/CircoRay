@@ -1,0 +1,10 @@
+/adm/*
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+  Pragma: no-cache
+  Expires: 0
+
+/assets/js/admin/*
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+
+/api/admin/*
+  Cache-Control: no-store
