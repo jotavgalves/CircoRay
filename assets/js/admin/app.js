@@ -1,5 +1,5 @@
-import { adminApi } from "./api.js";
-import { bindDirtyEvents, fillSimpleFields, readSimpleFields, renderRouletteEditors, readRouletteEditors } from "./form.js";
+import { adminApi } from "./api.js?v=20260908-1";
+import { bindDirtyEvents, fillSimpleFields, readSimpleFields, renderRouletteEditors, readRouletteEditors } from "./form.js?v=20260908-1";
 
 const DRAFT_KEY = "circoray:admin:draft:v1";
 const loginView = document.getElementById("loginView");
@@ -127,12 +127,8 @@ loginForm.addEventListener("submit", async (event) => {
   try {
     const payload = await adminApi.login(document.getElementById("password").value);
     document.getElementById("password").value = "";
-
-    // O login já retorna a configuração. O painel abre imediatamente e não
-    // depende de uma segunda requisição para sair da tela de login.
     applyPayload(payload);
 
-    // Diagnóstico complementar, sem bloquear a interface.
     adminApi.diagnostic().then((diag) => {
       if (!diag.authenticated) setStatus("Sessão criada, mas o diagnóstico do servidor não confirmou autenticação.", "error", true);
     }).catch((error) => {
