@@ -1,7 +1,10 @@
-import { createSessionCookie, createSessionToken, isPasswordValid, json } from "../../_shared/auth.js";
+import { createSessionToken, isPasswordValid, json } from "../../_shared/auth.js";
+import { cloneDefaultConfig } from "../../_shared/default-config.js";
 
 const WINDOW_SECONDS = 15 * 60;
 const MAX_FAILURES = 8;
+const CONFIG_KEY = "published-config";
+const BUILD = "admin-fix-20260908-1";
 
 async function digest(value) {
   const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
@@ -16,7 +19,8 @@ async function rateKey(request, secret) {
 export async function onRequestPost({ request, env }) {
   if (!env.ADMIN_PASSWORD || !env.SESSION_SECRET) {
     return json({
-      error: "Admin ainda não configurado no Cloudflare. Defina ADMIN_PASSWORD e SESSION_SECRET."
+      error: "Admin ainda não configurado no Cloudflare. Defina ADMIN_PASSWORD e SESSION_SECRET.",
+      build: BUILD
     }, 503);
   }
 
@@ -24,39 +28,71 @@ export async function onRequestPost({ request, env }) {
   try {
     body = await request.json();
   } catch {
-    return json({ error: "Requisição inválida." }, 400);
+    return json({ error: "Requisição inválida.", build: BUILD }, 400);
   }
 
+  const passwordOk = isPasswordValid(body?.password, env.ADMIN_PASSWORD);
   const hasKv = Boolean(env.CONFIG_KV);
   let key = null;
   let attempts = 0;
 
   if (hasKv) {
-    key = await rateKey(request, env.SESSION_SECRET);
-    attempts = Number((await env.CONFIG_KV.get(key)) || 0);
+    try {
+      key = await rateKey(request, env.SESSION_SECRET);
+      attempts = Number((await env.CONFIG_KV.get(key)) || 0);
+    } catch {
+      key = null;
+      attempts = 0;
+    }
+  }
 
-    if (attempts >= MAX_FAILURES && !isPasswordValid(body?.password, env.ADMIN_PASSWORD)) {
+  if (!passwordOk) {
+    if (key && attempts >= MAX_FAILURES) {
       return json(
-        { error: "Muitas tentativas de login. Tente novamente em alguns minutos." },
+        { error: "Muitas tentativas de login. Tente novamente em alguns minutos.", build: BUILD },
         429,
         { "Retry-After": String(WINDOW_SECONDS) }
       );
     }
-  }
 
-  if (!isPasswordValid(body?.password, env.ADMIN_PASSWORD)) {
-    if (hasKv && key) {
-      await env.CONFIG_KV.put(key, String(attempts + 1), { expirationTtl: WINDOW_SECONDS });
+    if (key) {
+      try {
+        await env.CONFIG_KV.put(key, String(attempts + 1), { expirationTtl: WINDOW_SECONDS });
+      } catch {}
     }
+
     return json({
       error: "Senha inválida.",
-      attemptsRemaining: hasKv ? Math.max(0, MAX_FAILURES - attempts - 1) : null
+      attemptsRemaining: key ? Math.max(0, MAX_FAILURES - attempts - 1) : null,
+      build: BUILD
     }, 401);
   }
 
-  if (hasKv && key) await env.CONFIG_KV.delete(key);
+  if (key) {
+    try { await env.CONFIG_KV.delete(key); } catch {}
+  }
 
   const token = await createSessionToken(env.SESSION_SECRET);
-  const cookie = await createSessionCookie(env.SESSION_SECRET);
-  return json({ ok: true, token, storageReady: hasKv }, 200, { "Set-Cookie": cookie });
+  let config = cloneDefaultConfig();
+  let storageReady = false;
+  let storageError = null;
+
+  if (hasKv) {
+    try {
+      const stored = await env.CONFIG_KV.get(CONFIG_KEY, "json");
+      if (stored && typeof stored === "object") config = stored;
+      storageReady = true;
+    } catch (error) {
+      storageError = error?.message || "Falha ao acessar CONFIG_KV.";
+    }
+  }
+
+  return json({
+    ok: true,
+    token,
+    config,
+    storageReady,
+    storageError,
+    build: BUILD
+  });
 }
