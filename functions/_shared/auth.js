@@ -38,11 +38,15 @@ function parseCookies(request) {
   }, {});
 }
 
-export async function createSessionCookie(secret) {
+export async function createSessionToken(secret) {
   const exp = Math.floor(Date.now() / 1000) + SESSION_SECONDS;
   const payload = `v1.${exp}`;
   const signature = await sign(secret, payload);
-  const token = `${payload}.${signature}`;
+  return `${payload}.${signature}`;
+}
+
+export async function createSessionCookie(secret) {
+  const token = await createSessionToken(secret);
   return `${COOKIE_NAME}=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${SESSION_SECONDS}`;
 }
 
@@ -50,17 +54,28 @@ export function clearSessionCookie() {
   return `${COOKIE_NAME}=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0`;
 }
 
-export async function isAuthenticated(request, secret) {
-  if (!secret) return false;
-  const token = parseCookies(request)[COOKIE_NAME];
-  if (!token) return false;
-  const parts = token.split(".");
+async function isTokenValid(token, secret) {
+  if (!token || !secret) return false;
+  const parts = String(token).split(".");
   if (parts.length !== 3 || parts[0] !== "v1") return false;
   const exp = Number(parts[1]);
   if (!Number.isFinite(exp) || exp <= Math.floor(Date.now() / 1000)) return false;
   const payload = `${parts[0]}.${parts[1]}`;
   const expected = await sign(secret, payload);
   return safeEqual(parts[2], expected);
+}
+
+export async function isAuthenticated(request, secret) {
+  if (!secret) return false;
+
+  const authorization = request.headers.get("Authorization") || "";
+  if (authorization.startsWith("Bearer ")) {
+    const bearer = authorization.slice(7).trim();
+    if (await isTokenValid(bearer, secret)) return true;
+  }
+
+  const cookieToken = parseCookies(request)[COOKIE_NAME];
+  return isTokenValid(cookieToken, secret);
 }
 
 export function isPasswordValid(provided, expected) {
