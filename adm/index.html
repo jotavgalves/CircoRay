@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>CircoRay — Administração</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Rye&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/admin.css">
+</head>
+<body>
+  <div class="ambient" aria-hidden="true"></div>
+
+  <main id="loginView" class="login-shell">
+    <form id="loginForm" class="login-card" autocomplete="on">
+      <div class="brand-mark">CR</div>
+      <p class="eyebrow">PAINEL RESTRITO</p>
+      <h1>CircoRay</h1>
+      <p class="muted">Controle a experiência publicada sem editar o código.</p>
+      <label class="field">
+        <span>Senha administrativa</span>
+        <input id="password" name="password" type="password" autocomplete="current-password" required autofocus>
+      </label>
+      <button class="button primary wide" type="submit">Entrar</button>
+      <p id="loginError" class="form-error" role="alert"></p>
+    </form>
+  </main>
+
+  <div id="appView" class="app-shell" hidden>
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-mark small">CR</div>
+        <div><strong>CircoRay</strong><span>Administração</span></div>
+      </div>
+      <nav id="sectionNav" class="nav-list" aria-label="Seções">
+        <button class="nav-item active" data-section="geral">Geral</button>
+        <button class="nav-item" data-section="pagina">Página e convite</button>
+        <button class="nav-item" data-section="palhaco">Falas do palhaço</button>
+        <button class="nav-item" data-section="roletas">Roletas e probabilidades</button>
+        <button class="nav-item" data-section="tempos">Tempos e regras</button>
+        <button class="nav-item" data-section="audio">Áudio</button>
+        <button class="nav-item" data-section="avancado">JSON avançado</button>
+      </nav>
+      <div class="sidebar-footer">
+        <a class="button ghost wide" href="/" target="_blank" rel="noopener">Abrir página</a>
+        <button id="logoutBtn" class="button ghost wide" type="button">Sair</button>
+      </div>
+    </aside>
+
+    <section class="workspace">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">CONFIGURAÇÃO PUBLICADA</p>
+          <h2 id="sectionTitle">Geral</h2>
+        </div>
+        <div class="top-actions">
+          <span id="storageBadge" class="badge">Verificando armazenamento…</span>
+          <button id="draftBtn" class="button ghost" type="button">Salvar rascunho</button>
+          <button id="publishBtn" class="button primary" type="button">Publicar alterações</button>
+        </div>
+      </header>
+
+      <div id="statusBar" class="status-bar" hidden></div>
+
+      <div class="content">
+        <section class="panel-section active" data-panel="geral">
+          <div class="section-heading"><div><h3>Geral</h3><p>Identificação da experiência e estado da configuração.</p></div></div>
+          <div class="card grid two">
+            <label class="field"><span>Título da página</span><input data-bind="event.title" type="text"></label>
+            <div class="metric-box"><span>Revisão publicada</span><strong id="revisionValue">0</strong><small id="updatedAtValue">Nunca publicada</small></div>
+          </div>
+          <div class="card warning-card"><strong>Publicação segura</strong><p>Salvar rascunho mantém as alterações somente neste navegador. “Publicar alterações” valida os dados no servidor e troca a configuração usada pela página pública.</p></div>
+        </section>
+
+        <section class="panel-section" data-panel="pagina">
+          <div class="section-heading"><div><h3>Página e convite</h3><p>Textos finais e destino do botão do convite.</p></div></div>
+          <div class="card grid two">
+            <label class="field full"><span>Link do convite</span><input data-bind="event.invitationUrl" type="url" placeholder="https://..."></label>
+            <label class="field full"><span>Texto do botão</span><input data-bind="event.invitationButtonText" type="text"></label>
+            <label class="field"><span>Texto do cupom</span><input data-bind="page.couponText" type="text"></label>
+            <label class="field"><span>Resultado do cupom</span><input data-bind="page.couponResultText" type="text"></label>
+            <label class="field"><span>Título final</span><input data-bind="page.couponTitle" type="text"></label>
+            <label class="field"><span>Descrição final</span><textarea data-bind="page.couponDescription" rows="3"></textarea></label>
+            <label class="field"><span>Fechado — linha 1</span><input data-bind="page.closedLine1" type="text"></label>
+            <label class="field"><span>Fechado — linha 2</span><input data-bind="page.closedLine2" type="text"></label>
+          </div>
+        </section>
+
+        <section class="panel-section" data-panel="palhaco">
+          <div class="section-heading"><div><h3>Falas do palhaço</h3><p>Uma fala por linha. Linhas vazias são ignoradas.</p></div></div>
+          <div class="card grid two">
+            <label class="field"><span>Provocações aleatórias</span><textarea data-array-bind="clown.taunts" rows="9"></textarea></label>
+            <label class="field"><span>Provocações ao clicar</span><textarea data-array-bind="clown.clickTaunts" rows="9"></textarea></label>
+            <label class="field full"><span>Falas de vitória</span><textarea data-array-bind="clown.winLines" rows="7"></textarea></label>
+          </div>
+          <div class="card grid three">
+            <label class="field"><span>Introdução — jogo 1</span><textarea data-bind="clown.introLines.game1" rows="3"></textarea></label>
+            <label class="field"><span>Introdução — jogo 2</span><textarea data-bind="clown.introLines.game2" rows="3"></textarea></label>
+            <label class="field"><span>Introdução — jogo 3</span><textarea data-bind="clown.introLines.game3" rows="3"></textarea></label>
+          </div>
+        </section>
+
+        <section class="panel-section" data-panel="roletas">
+          <div class="section-heading"><div><h3>Roletas e probabilidades</h3><p>O peso é convertido automaticamente em probabilidade relativa. Não precisa somar 100.</p></div></div>
+          <div id="rouletteEditors"></div>
+        </section>
+
+        <section class="panel-section" data-panel="tempos">
+          <div class="section-heading"><div><h3>Tempos e regras</h3><p>Valores em segundos são convertidos para milissegundos internamente quando necessário.</p></div></div>
+          <div class="card grid three">
+            <label class="field"><span>Máximo de giros</span><input data-number-bind="game.maxSpins" type="number" min="1" step="1"></label>
+            <label class="field"><span>Fala padrão (s)</span><input data-ms-bind="game.speechDurationMs" type="number" min="0.1" step="0.1"></label>
+            <label class="field"><span>Delay da introdução (s)</span><input data-ms-bind="game.introDelayMs" type="number" min="0" step="0.1"></label>
+            <label class="field"><span>Fala ao vencer (s)</span><input data-ms-bind="game.winSpeechDurationMs" type="number" min="0.1" step="0.1"></label>
+            <label class="field"><span>Transição após vitória (s)</span><input data-ms-bind="game.winTransitionDelayMs" type="number" min="0" step="0.1"></label>
+            <label class="field"><span>Duração do giro (s)</span><input data-ms-bind="game.spinDurationMs" type="number" min="0.25" step="0.05"></label>
+            <label class="field"><span>Delay para revelar giro (s)</span><input data-ms-bind="game.spinRevealDelayMs" type="number" min="0" step="0.05"></label>
+            <label class="field"><span>Tempo do jogo 1 (s)</span><input data-number-bind="game.game1TimeSeconds" type="number" min="1" step="1"></label>
+            <label class="field"><span>Penalidade jogo 1 (s)</span><input data-number-bind="game.game1WrongPenaltySeconds" type="number" min="0" step="1"></label>
+            <label class="field"><span>Reinício jogo 1 (s)</span><input data-ms-bind="game.game1RestartDelayMs" type="number" min="0" step="0.1"></label>
+            <label class="field"><span>Tempo do jogo 2 (s)</span><input data-number-bind="game.game2TimeSeconds" type="number" min="1" step="1"></label>
+          </div>
+        </section>
+
+        <section class="panel-section" data-panel="audio">
+          <div class="section-heading"><div><h3>Áudio</h3><p>Arquivo de música e comportamento de reprodução.</p></div></div>
+          <div class="card grid two">
+            <label class="field full"><span>URL/caminho da música</span><input data-bind="audio.src" type="text" placeholder="/arquivo.mp3"></label>
+            <label class="field"><span>Volume (0–100%)</span><input id="audioVolume" type="range" min="0" max="100" step="1"><output id="audioVolumeValue">30%</output></label>
+            <label class="toggle-field"><input id="audioLoop" type="checkbox"><span class="toggle"></span><span>Repetir música continuamente</span></label>
+          </div>
+        </section>
+
+        <section class="panel-section" data-panel="avancado">
+          <div class="section-heading"><div><h3>JSON avançado</h3><p>Editor integral da configuração. Útil para backup, revisão e campos que forem adicionados futuramente.</p></div><div class="inline-actions"><button id="applyJsonBtn" class="button ghost" type="button">Aplicar JSON ao formulário</button><button id="exportBtn" class="button ghost" type="button">Exportar</button><label class="button ghost file-button">Importar<input id="importInput" type="file" accept="application/json,.json"></label></div></div>
+          <div class="card"><textarea id="jsonEditor" class="code-editor" spellcheck="false" rows="28"></textarea></div>
+        </section>
+      </div>
+    </section>
+  </div>
+
+  <template id="rouletteTemplate">
+    <article class="card roulette-card">
+      <div class="roulette-head"><div><h4></h4><p class="roulette-total"></p></div><button class="button ghost add-item" type="button">+ Resultado</button></div>
+      <div class="roulette-table">
+        <div class="roulette-row roulette-header"><span>Resultado</span><span>Peso</span><span>Chance</span><span>Ativo</span><span></span></div>
+        <div class="roulette-items"></div>
+      </div>
+    </article>
+  </template>
+
+  <template id="rouletteItemTemplate">
+    <div class="roulette-row roulette-item">
+      <input class="item-label" type="text" aria-label="Resultado">
+      <input class="item-weight" type="number" min="0" step="0.01" aria-label="Peso">
+      <strong class="item-probability">0%</strong>
+      <label class="mini-toggle"><input class="item-enabled" type="checkbox" aria-label="Ativo"><span></span></label>
+      <button class="icon-button remove-item" type="button" title="Remover" aria-label="Remover">×</button>
+    </div>
+  </template>
+
+  <script type="module" src="/assets/js/admin/app.js"></script>
+</body>
+</html>
