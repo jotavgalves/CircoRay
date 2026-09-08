@@ -39,6 +39,9 @@ async function boot() {
   const { initRanking } = await import("/assets/js/ranking.js?v=20260908-1");
   initRanking();
 
+  const { initClownInteractions } = await import("/assets/js/clown-interactions.js?v=20260908-1");
+  initClownInteractions(config);
+
   window.dispatchEvent(new CustomEvent("circoray:config-ready", { detail: config }));
 }
 
