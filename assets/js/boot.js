@@ -1,11 +1,24 @@
 import { loadRuntimeConfig, applyStaticPageConfig } from "/assets/js/runtime-config.js";
 
+let legacyLoaded = false;
+
 function loadClassicScript(src) {
   return new Promise((resolve, reject) => {
+    const existing = document.querySelector(`script[src="${src}"]`);
+    if (existing) {
+      if (legacyLoaded) return resolve();
+      existing.addEventListener("load", resolve, { once: true });
+      existing.addEventListener("error", () => reject(new Error(`Falha ao carregar ${src}`)), { once: true });
+      return;
+    }
+
     const script = document.createElement("script");
     script.src = src;
     script.defer = false;
-    script.onload = resolve;
+    script.onload = () => {
+      legacyLoaded = true;
+      resolve();
+    };
     script.onerror = () => reject(new Error(`Falha ao carregar ${src}`));
     document.body.appendChild(script);
   });
@@ -14,10 +27,10 @@ function loadClassicScript(src) {
 async function boot() {
   const configPromise = loadRuntimeConfig();
 
-  // A lógica legada continua isolada neste arquivo durante a migração gradual.
-  // Carregá-la por aqui garante que a configuração remota seja aplicada sempre
-  // depois que as funções e variáveis do jogo já existirem.
+  // Mantém a experiência existente isolada durante a migração, mas garante
+  // que a configuração publicada seja aplicada depois que os globais existirem.
   await loadClassicScript("/assets/js/game-legacy.js");
+  legacyLoaded = true;
 
   const config = await configPromise;
   applyStaticPageConfig(config);
@@ -30,9 +43,8 @@ async function boot() {
 
 boot().catch((error) => {
   console.error("Falha ao iniciar CircoRay:", error);
-  // Se a camada de configuração falhar, ainda tentamos deixar a experiência
-  // original disponível em vez de entregar uma tela vazia.
-  if (!window.__circorayLegacyFallbackLoaded) {
+  // Se apenas a configuração falhar, não executamos a lógica legada duas vezes.
+  if (!legacyLoaded && !window.__circorayLegacyFallbackLoaded) {
     window.__circorayLegacyFallbackLoaded = true;
     loadClassicScript("/assets/js/game-legacy.js").catch(console.error);
   }
