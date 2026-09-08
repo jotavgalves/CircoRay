@@ -35,10 +35,10 @@ export async function createRankingSession(secret) {
 export async function verifyRankingSession(token, secret) {
   if (!token || !secret) return null;
   const parts = String(token).split(".");
-  if (parts.length !== 6 || parts[0] !== "rank" || parts[1] !== "v1") return null;
+  if (parts.length !== 5 || parts[0] !== "rank" || parts[1] !== "v1") return null;
   const startedAt = Number(parts[2]);
   const nonce = parts[3];
-  const signature = parts[4] === undefined ? "" : parts.at(-1);
+  const signature = parts[4];
   const payload = `rank.v1.${startedAt}.${nonce}`;
   const expected = await sign(secret, payload);
   if (!Number.isFinite(startedAt) || !safeEqual(signature, expected)) return null;
