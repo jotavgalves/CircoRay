@@ -84,7 +84,7 @@ export async function onRequestPost({ request, env }) {
   const ip = request.headers.get("CF-Connecting-IP") || "unknown";
   const rateKey = `ranking-rate:${ip}`;
   const recentlySubmitted = await env.CONFIG_KV.get(rateKey);
-  if (recentlySubmitted) return json({ error: "Aguarde alguns segundos antes de enviar outro resultado." }, 429);
+  if (recentlySubmitted) return json({ error: "Aguarde um minuto antes de enviar outro resultado." }, 429);
 
   const current = await readRanking(env);
   const nextEntry = { name, timeMs, completedAt, clientId };
@@ -96,7 +96,7 @@ export async function onRequestPost({ request, env }) {
 
   const ranking = normalizeEntries([...withoutClient, best]);
   await env.CONFIG_KV.put(RANKING_KEY, JSON.stringify(ranking));
-  await env.CONFIG_KV.put(rateKey, "1", { expirationTtl: 10 });
+  await env.CONFIG_KV.put(rateKey, "1", { expirationTtl: 60 });
 
   const position = ranking.findIndex((item) => item.clientId === clientId) + 1;
   return json({ ok: true, position: position || null, ranking });
