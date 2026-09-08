@@ -1,0 +1,36 @@
+name: Import halloween-jogo into CircoRay
+
+on:
+  push:
+    paths:
+      - '.github/workflows/import-source.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout CircoRay
+        uses: actions/checkout@v4
+
+      - name: Clone source repository
+        run: |
+          git clone --depth 1 https://github.com/criacaohalloween-rgb/halloween-jogo.git /tmp/halloween-jogo
+
+      - name: Mirror source contents
+        run: |
+          rsync -a --delete --exclude='.git/' /tmp/halloween-jogo/ ./
+
+      - name: Commit imported repository
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'Nothing to import.'
+            exit 0
+          fi
+          git commit -m 'Import halloween-jogo into CircoRay'
+          git push
