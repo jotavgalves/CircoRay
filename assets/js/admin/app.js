@@ -20,18 +20,19 @@ let hydrating = false;
 
 function clone(value) { return JSON.parse(JSON.stringify(value)); }
 
-function setStatus(message, type = "success") {
+function setStatus(message, type = "success", persistent = false) {
   statusBar.hidden = false;
   statusBar.className = `status-bar ${type}`;
   statusBar.textContent = message;
   clearTimeout(setStatus.timer);
-  setStatus.timer = setTimeout(() => { statusBar.hidden = true; }, 6000);
+  if (!persistent) setStatus.timer = setTimeout(() => { statusBar.hidden = true; }, 7000);
 }
 
-function setStorageState(ready) {
+function setStorageState(ready, detail = "") {
   storageReady = ready;
   storageBadge.className = `badge ${ready ? "ready" : "error"}`;
-  storageBadge.textContent = ready ? "KV conectado" : "KV não configurado";
+  storageBadge.textContent = ready ? "KV conectado" : "KV indisponível";
+  storageBadge.title = detail || "";
   publishBtn.disabled = !ready;
 }
 
@@ -84,11 +85,12 @@ function showApp() {
   appView.hidden = false;
 }
 
-async function loadAdminConfig({ offerDraft = true } = {}) {
-  const payload = await adminApi.getConfig();
+function applyPayload(payload, { offerDraft = true } = {}) {
+  if (!payload?.config) throw new Error("Servidor autenticou, mas não forneceu a configuração do painel.");
   publishedRevision = Number(payload.config?.revision || 0);
-  setStorageState(Boolean(payload.storageReady));
+  setStorageState(Boolean(payload.storageReady), payload.storageError || "");
   let config = payload.config;
+
   if (offerDraft) {
     const raw = localStorage.getItem(DRAFT_KEY);
     if (raw) {
@@ -101,8 +103,18 @@ async function loadAdminConfig({ offerDraft = true } = {}) {
       } catch { localStorage.removeItem(DRAFT_KEY); }
     }
   }
+
   hydrate(config);
   showApp();
+
+  if (!payload.storageReady) {
+    setStatus(`Painel aberto. O KV ainda não está disponível para publicar${payload.storageError ? `: ${payload.storageError}` : "."}`, "error", true);
+  }
+}
+
+async function loadAdminConfig({ offerDraft = true } = {}) {
+  const payload = await adminApi.getConfig();
+  applyPayload(payload, { offerDraft });
 }
 
 loginForm.addEventListener("submit", async (event) => {
@@ -111,12 +123,24 @@ loginForm.addEventListener("submit", async (event) => {
   const button = loginForm.querySelector("button[type=submit]");
   button.disabled = true;
   button.textContent = "Entrando…";
+
   try {
-    await adminApi.login(document.getElementById("password").value);
+    const payload = await adminApi.login(document.getElementById("password").value);
     document.getElementById("password").value = "";
-    await loadAdminConfig();
+
+    // O login já retorna a configuração. O painel abre imediatamente e não
+    // depende de uma segunda requisição para sair da tela de login.
+    applyPayload(payload);
+
+    // Diagnóstico complementar, sem bloquear a interface.
+    adminApi.diagnostic().then((diag) => {
+      if (!diag.authenticated) setStatus("Sessão criada, mas o diagnóstico do servidor não confirmou autenticação.", "error", true);
+    }).catch((error) => {
+      setStatus(`Painel aberto, mas o diagnóstico retornou ${error.status || "erro"}: ${error.message}`, "error", true);
+    });
   } catch (error) {
-    loginError.textContent = error.message;
+    const extra = error?.payload?.build ? ` [${error.payload.build}]` : "";
+    loginError.textContent = `${error.message}${extra}`;
   } finally {
     button.disabled = false;
     button.textContent = "Entrar";
@@ -134,7 +158,7 @@ draftBtn.addEventListener("click", () => {
 });
 
 publishBtn.addEventListener("click", async () => {
-  if (!storageReady) return setStatus("Vincule CONFIG_KV no Cloudflare antes de publicar.", "error");
+  if (!storageReady) return setStatus("CONFIG_KV ainda não está disponível no runtime do Cloudflare.", "error", true);
   let config;
   try { config = collectConfig(); } catch (error) { return setStatus(error.message, "error"); }
   publishBtn.disabled = true;
@@ -146,8 +170,9 @@ publishBtn.addEventListener("click", async () => {
     localStorage.removeItem(DRAFT_KEY);
     setStatus("Configuração publicada. A página pública já lerá esta revisão.");
   } catch (error) {
-    if (error.status === 409) setStatus("Outra sessão publicou alterações antes desta. Recarregue a configuração publicada.", "error");
-    else setStatus(error.message, "error");
+    if (error.status === 401) setStatus("A sessão expirou. Saia e entre novamente.", "error", true);
+    else if (error.status === 409) setStatus("Outra sessão publicou alterações antes desta. Recarregue a configuração publicada.", "error", true);
+    else setStatus(`${error.message}${error.status ? ` (HTTP ${error.status})` : ""}`, "error", true);
   } finally {
     publishBtn.disabled = !storageReady;
     if (dirty) publishBtn.textContent = "Publicar alterações •";
@@ -207,10 +232,15 @@ window.addEventListener("beforeunload", (event) => {
 });
 
 (async function init() {
+  if (!adminApi.hasToken()) {
+    showLogin();
+    return;
+  }
+
   try {
     await loadAdminConfig();
   } catch (error) {
-    if (error.status === 401) showLogin();
-    else showLogin(error.message);
+    adminApi.clearToken();
+    showLogin(`Sessão anterior inválida: ${error.message}`);
   }
 })();
