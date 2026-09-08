@@ -112,8 +112,8 @@ function onTap() {
 function installStyles() {
   const style = document.createElement("style");
   style.textContent = `
-    .clown-wrap{pointer-events:auto!important;cursor:pointer;touch-action:manipulation}
-    .clown-img{user-select:none;-webkit-user-drag:none}
+    .clown-wrap{pointer-events:none!important}
+    .clown-img{pointer-events:auto!important;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-drag:none}
     .cr-clown-shake{animation:crClownShake .38s ease both}
     .cr-clown-glitch{animation:crClownGlitch .8s steps(2,end) both;filter:drop-shadow(4px 0 #7a0000) drop-shadow(-4px 0 #d8a53a)!important}
     @keyframes crClownShake{0%,100%{transform:translateX(0) rotate(0)}20%{transform:translateX(-5px) rotate(-1deg)}45%{transform:translateX(5px) rotate(1deg)}70%{transform:translateX(-3px)}}
@@ -123,7 +123,7 @@ function installStyles() {
 }
 
 function installTarget() {
-  const target = document.querySelector(".clown-wrap") || document.querySelector(".clown-img");
+  const target = document.querySelector(".clown-img") || document.querySelector(".clown-wrap");
   if (!target) return false;
   target.setAttribute("role", "button");
   target.setAttribute("tabindex", "0");
