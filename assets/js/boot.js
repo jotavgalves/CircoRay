@@ -30,16 +30,22 @@ async function boot() {
   const { applyLegacyGameConfig } = await import("/assets/js/game-config-adapter.js?v=20260909-3");
   applyLegacyGameConfig(config);
 
+  const { initUiFixes } = await import("/assets/js/ui-fixes.js?v=20260909-1");
+  initUiFixes(config);
+
+  const { initGameAudio } = await import("/assets/js/audio-controller.js?v=20260909-1");
+  initGameAudio(config);
+
   const { initHardcoreMode } = await import("/assets/js/hardcore-mode.js?v=20260909-3");
   initHardcoreMode(config);
 
-  const { initHardcoreDiscovery } = await import("/assets/js/hardcore-discovery.js?v=20260909-1");
+  const { initHardcoreDiscovery } = await import("/assets/js/hardcore-discovery.js?v=20260909-2");
   initHardcoreDiscovery(config);
 
   const { initRanking } = await import("/assets/js/ranking.js?v=20260909-1");
   initRanking();
 
-  const { initClownInteractions } = await import("/assets/js/clown-interactions.js?v=20260909-2");
+  const { initClownInteractions } = await import("/assets/js/clown-interactions.js?v=20260909-3");
   initClownInteractions(config);
 
   window.dispatchEvent(new CustomEvent("circoray:config-ready", { detail: config }));
