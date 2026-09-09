@@ -29,6 +29,7 @@ export const DEFAULT_CONFIG = {
     game2TimeSeconds: 12
   },
   clown: {
+    angryAsset: "/assets/images/clown/clown-angry.svg",
     taunts: [
       "VAI RODAR DE NOVO? O QUE TAVA RUIM PODE PIORAR...",
       "EU TE DESEJO BOA SORTE... SÓ PRA PIORAR MAIS DEPOIS!",
@@ -43,6 +44,22 @@ export const DEFAULT_CONFIG = {
       "CLICA AÍ. O QUE É MAIS UMA ESCOLHA RUIM?",
       "ESSA ROLETA TE ODEIA. EU TAMBÉM."
     ],
+    tapTaunts: [
+      "EI. TIRA A MÃO DE MIM.",
+      "VOCÊ GOSTA DE PROVOCAR, NÉ?",
+      "CONTINUA TOCANDO. VAI DAR SUPER CERTO.",
+      "EU TÔ DE OLHO EM VOCÊ."
+    ],
+    angryTapTaunts: [
+      "TRÊS VEZES? TÁ PEDINDO PROBLEMA.",
+      "PARA DE ME CUTUCAR.",
+      "MAIS UMA E EU MUDO AS REGRAS."
+    ],
+    rareTapLines: [
+      "SETE TOQUES. VOCÊ REALMENTE NÃO TEM MEDO.",
+      "ACHOU O SEGREDO. NÃO CONTA PRA NINGUÉM.",
+      "VOCÊ NÃO DEVERIA TER FEITO ISSO."
+    ],
     winLines: [
       "HMF... DESSA VEZ VOCÊ LEVOU VANTAGEM.",
       "HMF! ATÉ QUE VOCÊ SE SAIU BEM.",
@@ -52,6 +69,14 @@ export const DEFAULT_CONFIG = {
       "ACHOU QUE IA SER FÁCIL? NÃO SE ANIME.",
       "PARABÉNS... EU NÃO ESPERAVA ESSA."
     ],
+    winTapLines: [
+      "GANHOU E AINDA VEIO ME PERTURBAR?",
+      "NÃO SE ACOSTUME."
+    ],
+    loseTapLines: [
+      "PERDEU E VEIO PEDIR CARINHO?",
+      "EU AVISEI."
+    ],
     introLines: {
       game1: "Vamos ver se sua pontaria presta...",
       game2: "Corra, corra... se for capaz.",
@@ -59,24 +84,6 @@ export const DEFAULT_CONFIG = {
     }
   },
   roulette: {
-    normalItems: [
-      { "id": "eu-nunca", "label": "EU NUNCA", "weight": 7, "enabled": true },
-      { "id": "escolha", "label": "ESCOLHA 1 PESSOA", "weight": 4, "enabled": true },
-      { "id": "coringa", "label": "CARTA CORINGA", "weight": 1, "enabled": true },
-      { "id": "pegadinha", "label": "PEGADINHA DOS HORRORES", "weight": 2, "enabled": true },
-      { "id": "rodada-maluca", "label": "RODADA MALUCA", "weight": 2, "enabled": true },
-      { "id": "vinganca", "label": "VALE-VINGANÇA", "weight": 1, "enabled": true },
-      { "id": "passe-livre", "label": "PASSE LIVRE", "weight": 3, "enabled": true }
-    ],
-    finalItems: [
-      { "id": "eu-nunca", "label": "EU NUNCA", "weight": 7, "enabled": true },
-      { "id": "escolha", "label": "ESCOLHA 1 PESSOA", "weight": 4, "enabled": true },
-      { "id": "coringa", "label": "CARTA CORINGA", "weight": 1, "enabled": true },
-      { "id": "pegadinha", "label": "PEGADINHA DOS HORRORES", "weight": 2, "enabled": true },
-      { "id": "rodada-maluca", "label": "RODADA MALUCA", "weight": 2, "enabled": true },
-      { "id": "vinganca", "label": "VALE-VINGANÇA", "weight": 1, "enabled": true },
-      { "id": "passe-livre", "label": "PASSE LIVRE", "weight": 3, "enabled": true }
-    ],
     outcomeItems: [
       { "id": "TICKET", "label": "TICKET", "weight": 20, "enabled": true },
       { "id": "VOLTE", "label": "VOLTE", "weight": 50, "enabled": true },
