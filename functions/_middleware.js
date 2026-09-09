@@ -54,7 +54,7 @@ export async function onRequest(context) {
   const transformed = rewriter
     .on("body", {
       element(element) {
-        element.append('<script type="module" src="/assets/js/boot.js?v=20260909-20"></script>', { html: true });
+        element.append('<script type="module" src="/assets/js/boot.js?v=20260909-21"></script>', { html: true });
       }
     })
     .transform(response);
