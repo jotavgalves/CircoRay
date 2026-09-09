@@ -2,6 +2,31 @@ import { loadRuntimeConfig, applyStaticPageConfig } from "/assets/js/runtime-con
 
 let legacyLoaded = false;
 
+function executeClassicSource(source, sourceUrl) {
+  const script = document.createElement("script");
+  script.textContent = `${source}\n//# sourceURL=${sourceUrl}`;
+  document.body.appendChild(script);
+  legacyLoaded = true;
+}
+
+async function loadPatchedLegacyGame() {
+  const src = "/assets/js/game-legacy.js";
+  const response = await fetch(`${src}?v=20260909-wheel-retry-1`, { cache: "no-store" });
+  if (!response.ok) throw new Error(`Falha ao carregar ${src}: ${response.status}`);
+
+  let source = await response.text();
+  const retryNeedle = `resultEl.textContent = "Tente novamente!";\n      playSfx("sfxLaugh");\n      sayLine(randomTaunt());\n      document.getElementById("spinBtn").disabled = false;`;
+  const retryReplacement = `resultEl.textContent = "Tente novamente!";\n      playSfx("sfxLaugh");\n      sayLine(randomTaunt());\n      g3.spinning = false;\n      document.getElementById("spinBtn").disabled = false;`;
+
+  if (source.includes(retryNeedle)) {
+    source = source.replace(retryNeedle, retryReplacement);
+  } else if (!source.includes(`sayLine(randomTaunt());\n      g3.spinning = false;\n      document.getElementById("spinBtn").disabled = false;`)) {
+    throw new Error("Patch seguro da roleta não encontrou o trecho esperado em game-legacy.js");
+  }
+
+  executeClassicSource(source, src);
+}
+
 function loadClassicScript(src) {
   return new Promise((resolve, reject) => {
     const existing = document.querySelector(`script[src="${src}"]`);
@@ -22,15 +47,14 @@ function loadClassicScript(src) {
 
 async function boot() {
   const configPromise = loadRuntimeConfig();
-  await loadClassicScript("/assets/js/game-legacy.js");
-  legacyLoaded = true;
+  await loadPatchedLegacyGame();
   const config = await configPromise;
   applyStaticPageConfig(config);
 
   const { applyLegacyGameConfig } = await import("/assets/js/game-config-adapter.js?v=20260909-4");
   applyLegacyGameConfig(config);
 
-  const { initUiFixes } = await import("/assets/js/ui-fixes.js?v=20260909-9");
+  const { initUiFixes } = await import("/assets/js/ui-fixes.js?v=20260909-10");
   initUiFixes(config);
 
   const { initGameAudio } = await import("/assets/js/audio-controller.js?v=20260909-2");
@@ -39,7 +63,7 @@ async function boot() {
   const { initHardcoreMode } = await import("/assets/js/hardcore-mode.js?v=20260909-3");
   initHardcoreMode(config);
 
-  const { initHardcoreAngrySwap } = await import("/assets/js/hardcore-angry-swap.js?v=20260909-2");
+  const { initHardcoreAngrySwap } = await import("/assets/js/hardcore-angry-swap.js?v=20260909-3");
   initHardcoreAngrySwap();
 
   const { initHardcoreDiscovery } = await import("/assets/js/hardcore-discovery.js?v=20260909-3");

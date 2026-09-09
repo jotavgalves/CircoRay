@@ -49,7 +49,7 @@ export function initUiFixes(){
   `;
   document.head.appendChild(style);
 
-  const names=['TICKET','TENTE DE NOVO','VOLTE AO INÍCIO','TICKET','TENTE DE NOVO','VOLTE AO INÍCIO'];
+  const names=['TICKET','VOLTE AO INÍCIO','TENTE DE NOVO','TICKET','VOLTE AO INÍCIO','TENTE DE NOVO'];
   const points=[[65.75,22.72],[81.5,50],[65.75,77.28],[34.25,77.28],[18.5,50],[34.25,22.72]];
   let raf=0;
   function fixWheel(){
