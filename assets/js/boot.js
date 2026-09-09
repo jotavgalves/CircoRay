@@ -30,7 +30,7 @@ async function boot() {
   const { applyLegacyGameConfig } = await import("/assets/js/game-config-adapter.js?v=20260909-4");
   applyLegacyGameConfig(config);
 
-  const { initUiFixes } = await import("/assets/js/ui-fixes.js?v=20260909-5");
+  const { initUiFixes } = await import("/assets/js/ui-fixes.js?v=20260909-6");
   initUiFixes(config);
 
   const { initGameAudio } = await import("/assets/js/audio-controller.js?v=20260909-2");
