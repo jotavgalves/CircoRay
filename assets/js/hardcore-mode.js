@@ -2,8 +2,8 @@ const MEMORY_KEY = "circoray:clown-memory:v1";
 
 const DEFAULTS = {
   enabled: true,
-  angerThreshold: 70,
-  furyThreshold: 90,
+  angerThreshold: 45,
+  furyThreshold: 75,
   initialAngerFromGrudgeMultiplier: 0.2,
   grudgeDecayPerDay: 2,
   angerDecayPerVisit: 12,
@@ -181,62 +181,54 @@ function startChase() {
     position(); requestAnimationFrame(loop);
   }
   position(); requestAnimationFrame(loop);
-  state.cleanupGame = () => { dead = true; };
 }
 function startDefend() {
-  state.cleanupGame?.();
   const stage = document.getElementById("crhc-stage");
   const fury = profile() === "fury";
-  const waves = fury ? state.cfg.defendFuryWaves : state.cfg.defendWaves;
-  const reaction = fury ? state.cfg.defendFuryReactionMs : state.cfg.defendReactionMs;
-  const labels = ["PORTA", "JANELA", "ALÇAPÃO", "VENTILAÇÃO"];
-  stage.innerHTML = `<section class="crhc-door-scene"><div><div class="crhc-wave">${state.cfg.defendTitle} · ONDA <b id="crhc-wave">1</b>/${waves}</div><div class="crhc-progress"><i id="crhc-progress"></i></div></div><div class="crhc-entries">${labels.map((x,i)=>`<button class="crhc-entry" data-i="${i}" type="button">${x}</button>`).join("")}</div><div class="crhc-wave">Toque na entrada que der o sinal antes que ele invada.</div></section>`;
-  const entries = [...stage.querySelectorAll(".crhc-entry")];
-  let wave = 0, target = -1, timer = null, locked = false;
-  function next() {
-    if (wave >= waves) { fillExtra(1); completeHardcore(); return; }
-    wave += 1; locked = false; entries.forEach(e => e.classList.remove("warn","fake","hit"));
-    stage.querySelector("#crhc-wave").textContent = wave;
-    stage.querySelector("#crhc-progress").style.width = `${(wave-1)/waves*100}%`;
-    target = Math.floor(Math.random()*entries.length);
-    const fakeChance = fury ? .45 : .25;
-    if (Math.random() < fakeChance) {
-      let fake = (target + 1 + Math.floor(Math.random()*3)) % entries.length;
-      entries[fake].classList.add("fake"); setTimeout(()=>entries[fake].classList.remove("fake"),220);
+  const totalWaves = Math.round(fury ? state.cfg.defendFuryWaves : state.cfg.defendWaves);
+  const reactionMs = Number(fury ? state.cfg.defendFuryReactionMs : state.cfg.defendReactionMs);
+  const entries = ["PORTA", "JANELA", "ALÇAPÃO", "VENTILAÇÃO"];
+  stage.innerHTML = `<div class="crhc-door-scene"><div><div class="crhc-wave">ONDA <b id="crhc-wave">1</b> / ${totalWaves}</div><div class="crhc-progress"><i id="crhc-progress"></i></div></div><div class="crhc-entries">${entries.map((e,i)=>`<button class="crhc-entry" data-i="${i}" type="button">${e}</button>`).join("")}</div><p style="text-align:center;margin:0;font-size:11px;color:#c8b9aa">Toque na entrada que estiver realmente ameaçada. O palhaço também cria sinais falsos.</p></div>`;
+  const buttons = [...stage.querySelectorAll(".crhc-entry")];
+  let wave = 0, active = -1, resolved = false, timer = null;
+  function nextWave() {
+    if (wave >= totalWaves) { fillExtra(1); completeHardcore(); return; }
+    wave += 1; resolved = false; active = Math.floor(Math.random()*buttons.length);
+    buttons.forEach(b=>b.classList.remove("warn","fake","hit"));
+    const fakeCandidates = buttons.map((_,i)=>i).filter(i=>i!==active);
+    if (Math.random() < (fury ? .7 : .45)) {
+      const fake = fakeCandidates[Math.floor(Math.random()*fakeCandidates.length)];
+      buttons[fake].classList.add("fake");
     }
-    setTimeout(() => {
-      entries[target].classList.add("warn");
-      timer = setTimeout(() => failWave(), reaction);
-    }, 320 + Math.random()*520);
+    setTimeout(()=>buttons[active].classList.add("warn"), 140);
+    stage.querySelector("#crhc-wave").textContent = wave;
+    stage.querySelector("#crhc-progress").style.width = `${(wave/totalWaves)*100}%`;
+    clearTimeout(timer);
+    timer = setTimeout(()=>failWave("ELE ENTROU."), reactionMs);
   }
-  function failWave() {
-    if (locked) return; locked = true; clearTimeout(timer); entries[target]?.classList.add("hit");
-    state.memory.losses += 1; state.memory.lastResult = "hardcore-defend-lose"; addAnger(5, "loss"); saveMemory();
-    setTimeout(()=>showRetry("ELE ENTROU.", "Escute os sinais. Feche a entrada certa.", startDefend),450);
+  function failWave(title) {
+    if (resolved) return; resolved = true; clearTimeout(timer);
+    if (active >= 0) buttons[active].classList.add("hit");
+    state.memory.losses += 1; state.memory.lastResult = "hardcore-defend-lose"; addAnger(5,"loss"); saveMemory();
+    setTimeout(()=>showRetry(title, "Você hesitou. Ele não.", startDefend), 300);
   }
-  entries.forEach((entry, index) => entry.addEventListener("click", () => {
-    if (locked) return;
-    if (index !== target || !entry.classList.contains("warn")) { entry.classList.add("fake"); setTimeout(()=>entry.classList.remove("fake"),260); return; }
-    locked = true; clearTimeout(timer); entry.classList.remove("warn");
-    stage.querySelector("#crhc-progress").style.width = `${wave/waves*100}%`;
-    setTimeout(next, 330);
+  buttons.forEach((button,i)=>button.addEventListener("click",()=>{
+    if (resolved) return;
+    if (i !== active) { failWave("PORTA ERRADA."); return; }
+    resolved = true; clearTimeout(timer); button.classList.remove("warn"); button.classList.add("hit");
+    setTimeout(nextWave, 260);
   }));
-  next();
-  state.cleanupGame = () => clearTimeout(timer);
+  nextWave();
 }
 function showRetry(title, text, retry) {
   const stage = document.getElementById("crhc-stage");
-  const box = document.createElement("div");
-  box.className = "crhc-result";
-  box.innerHTML = `<div><h2>${title}</h2><p>${text}</p><button class="crhc-btn" type="button">TENTAR DE NOVO</button></div>`;
-  stage.appendChild(box); box.querySelector("button").addEventListener("click", retry, { once: true });
+  stage.innerHTML = `<div class="crhc-result"><div><h2>${title}</h2><p>${text}</p><button class="crhc-btn" type="button">TENTAR DE NOVO</button></div></div>`;
+  stage.querySelector("button").addEventListener("click", retry, { once:true });
 }
 function completeHardcore() {
-  state.cleanupGame?.();
-  state.complete = true; state.active = false;
-  window.__circorayHardcoreComplete = true;
+  state.complete = true; window.__circorayHardcoreComplete = true; window.__circorayHardcoreActive = false;
   state.memory.hardcoreWins += 1; state.memory.wins += 1; state.memory.lastResult = "hardcore-win";
-  state.memory.anger = clamp(state.memory.anger - 18, 0, 100); saveMemory();
+  state.memory.anger = clamp(state.memory.anger - 18,0,100); saveMemory();
   const stage = document.getElementById("crhc-stage");
   stage.innerHTML = `<div class="crhc-result"><div><img src="${state.cfg.angryAsset}" alt="" style="width:min(180px,50vw)"><h2>VOCÊ SOBREVIVEU.</h2><p>O palhaço não esqueceu. Mas desta vez você terminou os cinco jogos.</p><button class="crhc-btn" type="button">VER RESULTADO</button></div></div>`;
   stage.querySelector("button").addEventListener("click", () => state.overlay.classList.remove("open"), { once: true });
@@ -258,6 +250,10 @@ export function initHardcoreMode(config = {}) {
   if (window.__circorayHardcoreLoaded) return;
   window.__circorayHardcoreLoaded = true;
   state.cfg = { ...DEFAULTS, ...(config?.hardcore || {}), angryAsset: config?.clown?.angryAsset || config?.hardcore?.angryAsset || DEFAULTS.angryAsset };
+  if (Number(state.cfg.angerThreshold) === 70 && Number(state.cfg.furyThreshold) === 90) {
+    state.cfg.angerThreshold = 45;
+    state.cfg.furyThreshold = 75;
+  }
   window.__circorayHardcoreActive = false;
   window.__circorayHardcoreComplete = false;
   initMemory(); installStyles(); createOverlay(); observeCompletion();
