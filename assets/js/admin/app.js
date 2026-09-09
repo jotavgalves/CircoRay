@@ -1,5 +1,5 @@
 import { adminApi } from "./api.js?v=20260908-1";
-import { bindDirtyEvents, fillSimpleFields, readSimpleFields, renderRouletteEditors, readRouletteEditors } from "./form.js?v=20260908-1";
+import { bindDirtyEvents, fillSimpleFields, readSimpleFields, renderRouletteEditors, readRouletteEditors } from "./form.js?v=20260909-1";
 
 const DRAFT_KEY = "circoray:admin:draft:v1";
 const loginView = document.getElementById("loginView");
@@ -66,6 +66,8 @@ function hydrate(config) {
   currentConfig = clone(config);
   fillSimpleFields(currentConfig);
   renderRouletteEditors(currentConfig, markDirty);
+  const angryPreview = document.getElementById("angryClownPreview");
+  if (angryPreview && currentConfig.clown?.angryAsset) angryPreview.src = currentConfig.clown.angryAsset;
   jsonEditor.value = JSON.stringify(currentConfig, null, 2);
   updateMeta(currentConfig);
   hydrating = false;
