@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Rye&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/assets/css/admin.css?v=20260908-1">
+  <link rel="stylesheet" href="/assets/css/admin.css?v=20260909-1">
 </head>
 <body>
   <div class="ambient" aria-hidden="true"></div>
@@ -28,7 +28,7 @@
       </label>
       <button class="button primary wide" type="submit">Entrar</button>
       <p id="loginError" class="form-error" role="alert"></p>
-      <small class="muted" style="display:block;margin-top:12px">Build admin: 20260908-1</small>
+      <small class="muted" style="display:block;margin-top:12px">Build admin: 20260909-1</small>
     </form>
   </main>
 
@@ -42,7 +42,7 @@
         <button class="nav-item active" data-section="geral">Geral</button>
         <button class="nav-item" data-section="pagina">Página e convite</button>
         <button class="nav-item" data-section="palhaco">Falas do palhaço</button>
-        <button class="nav-item" data-section="roletas">Roletas e probabilidades</button>
+        <button class="nav-item" data-section="roletas">Roleta e probabilidades</button>
         <button class="nav-item" data-section="tempos">Tempos e regras</button>
         <button class="nav-item" data-section="audio">Áudio</button>
         <button class="nav-item" data-section="avancado">JSON avançado</button>
@@ -72,7 +72,7 @@
         <section class="panel-section active" data-panel="geral">
           <div class="section-heading"><div><h3>Geral</h3><p>Identificação da experiência e estado da configuração.</p></div></div>
           <div class="card grid two">
-            <label class="field"><span>Título da página</span><input data-bind="event.title" type="text"></label>
+            <label class="field full"><span>Título da página</span><input data-bind="event.title" type="text"></label>
             <div class="metric-box"><span>Revisão publicada</span><strong id="revisionValue">0</strong><small id="updatedAtValue">Nunca publicada</small></div>
           </div>
           <div class="card warning-card"><strong>Publicação segura</strong><p>Salvar rascunho mantém as alterações somente neste navegador. “Publicar alterações” valida os dados no servidor e troca a configuração usada pela página pública.</p></div>
@@ -93,11 +93,27 @@
         </section>
 
         <section class="panel-section" data-panel="palhaco">
-          <div class="section-heading"><div><h3>Falas do palhaço</h3><p>Uma fala por linha. Linhas vazias são ignoradas.</p></div></div>
+          <div class="section-heading"><div><h3>Falas do palhaço</h3><p>Todas as falas usadas pelo jogo estão aqui. Nos campos de lista, use uma fala por linha.</p></div></div>
+
           <div class="card grid two">
-            <label class="field"><span>Provocações aleatórias</span><textarea data-array-bind="clown.taunts" rows="9"></textarea></label>
-            <label class="field"><span>Provocações ao clicar</span><textarea data-array-bind="clown.clickTaunts" rows="9"></textarea></label>
-            <label class="field full"><span>Falas de vitória</span><textarea data-array-bind="clown.winLines" rows="7"></textarea></label>
+            <div class="field">
+              <span>Palhaço irritado — prévia</span>
+              <div style="min-height:250px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.08);border-radius:14px;background:rgba(0,0,0,.28);overflow:hidden;padding:16px">
+                <img id="angryClownPreview" src="/assets/images/clown/clown-angry.svg" alt="Prévia do palhaço irritado" style="display:block;width:min(100%,320px);max-height:310px;object-fit:contain">
+              </div>
+            </div>
+            <label class="field"><span>Arquivo do palhaço irritado</span><input id="angryAssetInput" data-bind="clown.angryAsset" type="text" placeholder="/assets/images/clown/clown-angry.svg"><small class="muted">Ele substitui temporariamente a imagem normal quando o palhaço fica irritado.</small></label>
+          </div>
+
+          <div class="card grid two">
+            <label class="field"><span>Provocações gerais do jogo</span><textarea data-array-bind="clown.taunts" rows="8"></textarea></label>
+            <label class="field"><span>Provocações ao acionar a roleta</span><textarea data-array-bind="clown.clickTaunts" rows="8"></textarea></label>
+            <label class="field"><span>Toque normal no palhaço</span><textarea data-array-bind="clown.tapTaunts" rows="8"></textarea></label>
+            <label class="field"><span>Palhaço irritado — vários toques rápidos</span><textarea data-array-bind="clown.angryTapTaunts" rows="8"></textarea></label>
+            <label class="field"><span>Falas raras — toque secreto</span><textarea data-array-bind="clown.rareTapLines" rows="8"></textarea></label>
+            <label class="field"><span>Falas de vitória do jogo</span><textarea data-array-bind="clown.winLines" rows="8"></textarea></label>
+            <label class="field"><span>Toque no palhaço após vencer</span><textarea data-array-bind="clown.winTapLines" rows="8"></textarea></label>
+            <label class="field"><span>Toque no palhaço após perder</span><textarea data-array-bind="clown.loseTapLines" rows="8"></textarea></label>
           </div>
           <div class="card grid three">
             <label class="field"><span>Introdução — jogo 1</span><textarea data-bind="clown.introLines.game1" rows="3"></textarea></label>
@@ -107,7 +123,8 @@
         </section>
 
         <section class="panel-section" data-panel="roletas">
-          <div class="section-heading"><div><h3>Roletas e probabilidades</h3><p>O peso é convertido automaticamente em probabilidade relativa. Não precisa somar 100.</p></div></div>
+          <div class="section-heading"><div><h3>Roleta e probabilidades</h3><p>Esta é a única roleta lógica existente no jogo. Ela controla a chance real de TICKET, VOLTE e TENTE.</p></div></div>
+          <div class="card warning-card"><strong>Sem roletas fantasmas</strong><p>As antigas “Roleta normal” e “Roleta final” foram removidas do painel porque seus resultados não existem na experiência atual. Os três resultados abaixo correspondem diretamente ao código do jogo.</p></div>
           <div id="rouletteEditors"></div>
         </section>
 
@@ -165,6 +182,13 @@
     </div>
   </template>
 
-  <script type="module" src="/assets/js/admin/app.js?v=20260908-1"></script>
+  <script type="module" src="/assets/js/admin/app.js?v=20260909-1"></script>
+  <script>
+    document.addEventListener('input', (event) => {
+      if (event.target?.id !== 'angryAssetInput') return;
+      const preview = document.getElementById('angryClownPreview');
+      if (preview && event.target.value.trim()) preview.src = event.target.value.trim();
+    });
+  </script>
 </body>
 </html>

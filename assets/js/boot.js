@@ -33,13 +33,13 @@ async function boot() {
   const config = await configPromise;
   applyStaticPageConfig(config);
 
-  const { applyLegacyGameConfig } = await import("/assets/js/game-config-adapter.js");
+  const { applyLegacyGameConfig } = await import("/assets/js/game-config-adapter.js?v=20260909-1");
   applyLegacyGameConfig(config);
 
   const { initRanking } = await import("/assets/js/ranking.js?v=20260908-1");
   initRanking();
 
-  const { initClownInteractions } = await import("/assets/js/clown-interactions.js?v=20260908-1");
+  const { initClownInteractions } = await import("/assets/js/clown-interactions.js?v=20260909-1");
   initClownInteractions(config);
 
   window.dispatchEvent(new CustomEvent("circoray:config-ready", { detail: config }));

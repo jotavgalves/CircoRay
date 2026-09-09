@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 620" role="img" aria-labelledby="title desc">
+  <title id="title">Palhaço irritado</title>
+  <desc id="desc">Rosto de palhaço de circo sombrio com expressão agressiva, cabelo vermelho e maquiagem marcada.</desc>
+  <defs>
+    <radialGradient id="skin" cx="50%" cy="35%" r="70%">
+      <stop offset="0" stop-color="#f1e3ce"/>
+      <stop offset=".72" stop-color="#c9b69c"/>
+      <stop offset="1" stop-color="#8d7762"/>
+    </radialGradient>
+    <linearGradient id="hair" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#a10d0d"/>
+      <stop offset=".55" stop-color="#5d0508"/>
+      <stop offset="1" stop-color="#250204"/>
+    </linearGradient>
+    <linearGradient id="mouth" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#360306"/>
+      <stop offset="1" stop-color="#080102"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%">
+      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#000" flood-opacity=".55"/>
+    </filter>
+    <filter id="glow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="7" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <g filter="url(#shadow)">
+    <path fill="url(#hair)" d="M96 180C52 139 68 88 116 91c-14-52 44-87 79-48 23-50 91-48 111-1 41-39 99-3 82 49 53-7 74 50 41 88 48 25 33 91-18 98 18 48-29 89-72 64H171c-43 25-91-17-71-65-52-9-65-74-17-99 4-1 8-2 13-3z"/>
+
+    <path fill="url(#skin)" stroke="#31251f" stroke-width="10" d="M135 174c29-69 218-72 250 2 28 66 28 234-5 318-27 68-82 101-121 102-41 0-96-34-122-101-33-84-31-255-2-321z"/>
+
+    <path fill="#731014" opacity=".92" d="M143 238c37-35 77-48 115-39-32 10-58 29-81 58l-34-19zm234 0c-37-35-77-48-115-39 32 10 58 29 81 58l34-19z"/>
+    <path fill="#221815" d="M153 251c31-30 70-38 101-23-27-3-54 7-77 31l-24-8zm214 0c-31-30-70-38-101-23 27-3 54 7 77 31l24-8z"/>
+
+    <ellipse cx="202" cy="282" rx="38" ry="30" fill="#f4ead8"/>
+    <ellipse cx="318" cy="282" rx="38" ry="30" fill="#f4ead8"/>
+    <ellipse cx="207" cy="284" rx="14" ry="17" fill="#111"/>
+    <ellipse cx="313" cy="284" rx="14" ry="17" fill="#111"/>
+    <circle cx="211" cy="279" r="4" fill="#d92323" filter="url(#glow)"/>
+    <circle cx="309" cy="279" r="4" fill="#d92323" filter="url(#glow)"/>
+
+    <path fill="#8e1217" d="M227 321c9-17 57-17 66 1 7 17-8 38-33 39-25 0-41-22-33-40z"/>
+    <ellipse cx="248" cy="331" rx="10" ry="6" fill="#d44a48" opacity=".65"/>
+
+    <path fill="#7d0a12" d="M137 330c24 7 42 22 56 47-24-13-44-16-60-9l4-38zm246 0c-24 7-42 22-56 47 24-13 44-16 60-9l-4-38z" opacity=".85"/>
+
+    <path fill="url(#mouth)" stroke="#6f090f" stroke-width="11" d="M164 409c27 9 58 6 96-7 37 13 70 16 96 6-15 91-171 94-192 1z"/>
+    <path fill="#efe8d7" d="M184 420c24 3 49-1 76-10 28 9 54 13 78 9-8 18-28 30-39 35-26-8-52-8-78 0-15-6-29-18-37-34z"/>
+    <path stroke="#7e6d5c" stroke-width="4" d="M222 414l-1 40m38-46v43m40-37v40" opacity=".65"/>
+    <path fill="#9c0d14" d="M203 476c38-22 78-21 115-1-28 25-82 27-115 1z"/>
+
+    <path fill="none" stroke="#6e0a0d" stroke-width="13" stroke-linecap="round" d="M153 385c20 5 35 15 48 31m166-31c-20 5-35 15-48 31"/>
+    <path fill="none" stroke="#3b2b24" stroke-width="7" stroke-linecap="round" d="M167 213c27-23 60-28 88-15m98 15c-27-23-60-28-88-15"/>
+  </g>
+
+  <g opacity=".9">
+    <path fill="#8d0c10" d="M79 205l47 24-47 22-42-24 42-22zm362 0l42 22-42 24-47-22 47-24z"/>
+    <circle cx="78" cy="228" r="9" fill="#d1a62d"/>
+    <circle cx="442" cy="228" r="9" fill="#d1a62d"/>
+  </g>
+</svg>

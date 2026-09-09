@@ -1,4 +1,5 @@
 const FALLBACK = {
+  angryAsset: "/assets/images/clown/clown-angry.svg",
   tapTaunts: [
     "EI. TIRA A MÃO DE MIM.",
     "VOCÊ GOSTA DE PROVOCAR, NÉ?",
@@ -8,7 +9,7 @@ const FALLBACK = {
   angryTapTaunts: [
     "TRÊS VEZES? TÁ PEDINDO PROBLEMA.",
     "PARA DE ME CUTUCAR.",
-    "MAIS UMA E EU MUDA AS REGRAS."
+    "MAIS UMA E EU MUDO AS REGRAS."
   ],
   rareTapLines: [
     "SETE TOQUES. VOCÊ REALMENTE NÃO TEM MEDO.",
@@ -30,7 +31,9 @@ const state = {
   taps: [],
   lastNormalReactionAt: 0,
   totalTaps: 0,
-  installed: false
+  installed: false,
+  angryTimer: null,
+  angryToken: 0
 };
 
 function pick(list) {
@@ -59,8 +62,48 @@ function gameState() {
   return "playing";
 }
 
+function clownTarget() {
+  return document.querySelector(".clown-img") || document.querySelector(".clown-wrap");
+}
+
+function showAngry(duration = 1400) {
+  const target = clownTarget();
+  const angryAsset = state.cfg.angryAsset || FALLBACK.angryAsset;
+  if (!target || !angryAsset) return;
+
+  state.angryToken += 1;
+  const token = state.angryToken;
+  clearTimeout(state.angryTimer);
+  target.classList.add("cr-clown-angry-visible");
+
+  if (target.tagName === "IMG") {
+    if (!target.dataset.crNormalSrc) target.dataset.crNormalSrc = target.getAttribute("src") || "";
+    target.setAttribute("src", angryAsset);
+  } else {
+    if (target.dataset.crNormalBackground === undefined) target.dataset.crNormalBackground = target.style.backgroundImage || "";
+    target.style.backgroundImage = `url("${String(angryAsset).replace(/"/g, "%22")}")`;
+    target.style.backgroundSize = "contain";
+    target.style.backgroundPosition = "center";
+    target.style.backgroundRepeat = "no-repeat";
+  }
+
+  state.angryTimer = setTimeout(() => {
+    if (token !== state.angryToken) return;
+    target.classList.remove("cr-clown-angry-visible");
+    if (target.tagName === "IMG") {
+      const normalSrc = target.dataset.crNormalSrc;
+      if (normalSrc) target.setAttribute("src", normalSrc);
+    } else {
+      target.style.backgroundImage = target.dataset.crNormalBackground || "";
+      target.style.backgroundSize = "";
+      target.style.backgroundPosition = "";
+      target.style.backgroundRepeat = "";
+    }
+  }, duration);
+}
+
 function addEffect(kind) {
-  const clown = document.querySelector(".clown-img") || document.querySelector(".clown-wrap");
+  const clown = clownTarget();
   if (!clown) return;
   clown.classList.remove("cr-clown-shake", "cr-clown-glitch");
   void clown.offsetWidth;
@@ -86,18 +129,21 @@ function onTap() {
   if (mode === "lose") {
     say(pick(state.cfg.loseTapLines || FALLBACK.loseTapLines));
     addEffect("normal");
+    showAngry(1700);
     return;
   }
 
   if (state.totalTaps % 7 === 0) {
     say(pick(state.cfg.rareTapLines || FALLBACK.rareTapLines), 3000);
     addEffect("rare");
+    showAngry(2200);
     return;
   }
 
   if (state.taps.length >= 3) {
     say(pick(state.cfg.angryTapTaunts || FALLBACK.angryTapTaunts), 2500);
     addEffect("normal");
+    showAngry(1700);
     state.taps = [];
     return;
   }
@@ -116,6 +162,7 @@ function installStyles() {
     .clown-img{pointer-events:auto!important;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-drag:none}
     .cr-clown-shake{animation:crClownShake .38s ease both}
     .cr-clown-glitch{animation:crClownGlitch .8s steps(2,end) both;filter:drop-shadow(4px 0 #7a0000) drop-shadow(-4px 0 #d8a53a)!important}
+    .cr-clown-angry-visible{filter:drop-shadow(0 0 18px rgba(160,0,0,.7)) contrast(1.08)!important}
     @keyframes crClownShake{0%,100%{transform:translateX(0) rotate(0)}20%{transform:translateX(-5px) rotate(-1deg)}45%{transform:translateX(5px) rotate(1deg)}70%{transform:translateX(-3px)}}
     @keyframes crClownGlitch{0%,100%{transform:none}20%{transform:translate(-5px,2px) skewX(3deg)}40%{transform:translate(5px,-1px) skewX(-4deg)}60%{transform:scale(1.03)}80%{transform:translate(-2px,1px)}}
   `;
@@ -123,7 +170,7 @@ function installStyles() {
 }
 
 function installTarget() {
-  const target = document.querySelector(".clown-img") || document.querySelector(".clown-wrap");
+  const target = clownTarget();
   if (!target) return false;
   target.setAttribute("role", "button");
   target.setAttribute("tabindex", "0");

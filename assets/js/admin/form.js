@@ -14,10 +14,6 @@ export function setPath(obj, path, value) {
   cursor[keys.at(-1)] = value;
 }
 
-function slug(value) {
-  return String(value || "item").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || "item";
-}
-
 export function fillSimpleFields(config) {
   document.querySelectorAll("[data-bind]").forEach((el) => { el.value = getPath(config, el.dataset.bind) ?? ""; });
   document.querySelectorAll("[data-array-bind]").forEach((el) => {
@@ -49,74 +45,71 @@ export function readSimpleFields(config) {
   return next;
 }
 
-const ROULETTES = [
-  ["normalItems", "Roleta normal", "Resultados usados nos giros comuns."],
-  ["finalItems", "Roleta final", "Resultados usados no giro final."],
-  ["outcomeItems", "Roleta de resultado", "Probabilidade interna de TICKET / VOLTE / TENTE."]
-];
-
 export function renderRouletteEditors(config, onChange) {
   const host = document.getElementById("rouletteEditors");
   const cardTemplate = document.getElementById("rouletteTemplate");
   const itemTemplate = document.getElementById("rouletteItemTemplate");
   host.innerHTML = "";
 
-  ROULETTES.forEach(([key, title, description]) => {
-    const fragment = cardTemplate.content.cloneNode(true);
-    const card = fragment.querySelector(".roulette-card");
-    card.dataset.key = key;
-    card.querySelector("h4").textContent = title;
-    card.querySelector(".roulette-total").textContent = description;
-    const itemsHost = card.querySelector(".roulette-items");
+  const fragment = cardTemplate.content.cloneNode(true);
+  const card = fragment.querySelector(".roulette-card");
+  card.dataset.key = "outcomeItems";
+  card.querySelector("h4").textContent = "Roleta real do jogo";
+  card.querySelector(".roulette-total").textContent = "Probabilidade dos três resultados que realmente existem: TICKET, VOLTE e TENTE.";
+  const addButton = card.querySelector(".add-item");
+  if (addButton) addButton.remove();
+  const itemsHost = card.querySelector(".roulette-items");
 
-    function recalc() {
-      const rows = [...itemsHost.querySelectorAll(".roulette-item")];
-      const weights = rows.map((row) => row.querySelector(".item-enabled").checked ? Math.max(0, Number(row.querySelector(".item-weight").value) || 0) : 0);
-      const total = weights.reduce((sum, value) => sum + value, 0);
-      rows.forEach((row, index) => {
-        const pct = total > 0 ? (weights[index] / total) * 100 : 0;
-        row.querySelector(".item-probability").textContent = `${pct.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`;
-      });
-      card.querySelector(".roulette-total").textContent = `${description} Peso ativo total: ${total.toLocaleString("pt-BR")}.`;
-      onChange?.();
-    }
+  function recalc() {
+    const rows = [...itemsHost.querySelectorAll(".roulette-item")];
+    const weights = rows.map((row) => row.querySelector(".item-enabled").checked ? Math.max(0, Number(row.querySelector(".item-weight").value) || 0) : 0);
+    const total = weights.reduce((sum, value) => sum + value, 0);
+    rows.forEach((row, index) => {
+      const pct = total > 0 ? (weights[index] / total) * 100 : 0;
+      row.querySelector(".item-probability").textContent = `${pct.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`;
+    });
+    card.querySelector(".roulette-total").textContent = `Somente TICKET, VOLTE e TENTE existem no jogo. Peso ativo total: ${total.toLocaleString("pt-BR")}.`;
+    onChange?.();
+  }
 
-    function addRow(item = {}) {
-      const itemFragment = itemTemplate.content.cloneNode(true);
-      const row = itemFragment.querySelector(".roulette-item");
-      row.dataset.id = item.id || `item-${Date.now()}-${Math.random().toString(16).slice(2, 7)}`;
-      row.querySelector(".item-label").value = item.label || "Novo resultado";
-      row.querySelector(".item-weight").value = Number(item.weight ?? 1);
-      row.querySelector(".item-enabled").checked = item.enabled !== false;
-      row.querySelectorAll("input").forEach((input) => input.addEventListener("input", recalc));
-      row.querySelector(".item-enabled").addEventListener("change", recalc);
-      row.querySelector(".remove-item").addEventListener("click", () => { row.remove(); recalc(); });
-      itemsHost.appendChild(row);
-      recalc();
-    }
+  function addFixedRow(item = {}) {
+    const itemFragment = itemTemplate.content.cloneNode(true);
+    const row = itemFragment.querySelector(".roulette-item");
+    row.dataset.id = item.id;
+    const label = row.querySelector(".item-label");
+    label.value = item.label || item.id;
+    label.readOnly = true;
+    label.title = "Este resultado corresponde diretamente à lógica do jogo e não pode ser renomeado.";
+    row.querySelector(".item-weight").value = Number(item.weight ?? 1);
+    row.querySelector(".item-enabled").checked = item.enabled !== false;
+    const removeButton = row.querySelector(".remove-item");
+    if (removeButton) removeButton.remove();
+    row.querySelector(".item-weight").addEventListener("input", recalc);
+    row.querySelector(".item-enabled").addEventListener("change", recalc);
+    itemsHost.appendChild(row);
+  }
 
-    (config.roulette?.[key] || []).forEach(addRow);
-    card.querySelector(".add-item").addEventListener("click", () => addRow());
-    host.appendChild(fragment);
+  const current = Array.isArray(config.roulette?.outcomeItems) ? config.roulette.outcomeItems : [];
+  ["TICKET", "VOLTE", "TENTE"].forEach((id) => {
+    const item = current.find((candidate) => candidate.id === id) || { id, label: id, weight: 1, enabled: true };
+    addFixedRow({ ...item, id, label: id });
   });
+  recalc();
+  host.appendChild(fragment);
 }
 
 export function readRouletteEditors(config) {
   const next = clone(config);
   next.roulette = next.roulette || {};
-  document.querySelectorAll(".roulette-card").forEach((card) => {
-    const key = card.dataset.key;
-    next.roulette[key] = [...card.querySelectorAll(".roulette-item")].map((row, index) => {
-      const label = row.querySelector(".item-label").value.trim();
-      const preservedId = row.dataset.id;
-      return {
-        id: preservedId && !preservedId.startsWith("item-") ? preservedId : `${slug(label)}-${index + 1}`,
-        label,
-        weight: Math.max(0, Number(row.querySelector(".item-weight").value) || 0),
-        enabled: row.querySelector(".item-enabled").checked
-      };
-    });
-  });
+  const card = document.querySelector('.roulette-card[data-key="outcomeItems"]');
+  next.roulette.outcomeItems = card ? [...card.querySelectorAll(".roulette-item")].map((row) => ({
+    id: row.dataset.id,
+    label: row.dataset.id,
+    weight: Math.max(0, Number(row.querySelector(".item-weight").value) || 0),
+    enabled: row.querySelector(".item-enabled").checked
+  })) : (next.roulette.outcomeItems || []);
+  delete next.roulette.normalItems;
+  delete next.roulette.finalItems;
   return next;
 }
 
