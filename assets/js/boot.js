@@ -1,4 +1,4 @@
-import { loadRuntimeConfig, applyStaticPageConfig } from "/assets/js/runtime-config.js";
+import { loadRuntimeConfig, applyStaticPageConfig } from "/assets/js/runtime-config.js?v=20260909-2";
 
 let legacyLoaded = false;
 
