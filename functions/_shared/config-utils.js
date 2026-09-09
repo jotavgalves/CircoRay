@@ -66,9 +66,15 @@ export function normalizeConfig(input, previousRevision = 0) {
       game2TimeSeconds: number(c.game?.game2TimeSeconds, d.game.game2TimeSeconds, 1, 600)
     },
     clown: {
+      angryAsset: text(c.clown?.angryAsset, d.clown.angryAsset),
       taunts: stringArray(c.clown?.taunts, d.clown.taunts),
       clickTaunts: stringArray(c.clown?.clickTaunts, d.clown.clickTaunts),
+      tapTaunts: stringArray(c.clown?.tapTaunts, d.clown.tapTaunts),
+      angryTapTaunts: stringArray(c.clown?.angryTapTaunts, d.clown.angryTapTaunts),
+      rareTapLines: stringArray(c.clown?.rareTapLines, d.clown.rareTapLines),
       winLines: stringArray(c.clown?.winLines, d.clown.winLines),
+      winTapLines: stringArray(c.clown?.winTapLines, d.clown.winTapLines),
+      loseTapLines: stringArray(c.clown?.loseTapLines, d.clown.loseTapLines),
       introLines: {
         game1: text(intro.game1, d.clown.introLines.game1),
         game2: text(intro.game2, d.clown.introLines.game2),
@@ -76,8 +82,6 @@ export function normalizeConfig(input, previousRevision = 0) {
       }
     },
     roulette: {
-      normalItems: weightedItems(c.roulette?.normalItems, d.roulette.normalItems),
-      finalItems: weightedItems(c.roulette?.finalItems, d.roulette.finalItems),
       outcomeItems: weightedItems(c.roulette?.outcomeItems, d.roulette.outcomeItems)
     },
     audio: {
@@ -87,9 +91,12 @@ export function normalizeConfig(input, previousRevision = 0) {
     }
   };
 
-  const allWeighted = [config.roulette.normalItems, config.roulette.finalItems, config.roulette.outcomeItems];
-  if (allWeighted.some((items) => !items.some((item) => item.enabled && item.weight > 0))) {
-    throw new Error("Cada roleta precisa ter pelo menos um item ativo com peso maior que zero.");
+  if (!config.roulette.outcomeItems.some((item) => item.enabled && item.weight > 0)) {
+    throw new Error("A roleta precisa ter pelo menos um resultado ativo com peso maior que zero.");
+  }
+  const allowedOutcomes = new Set(["TICKET", "VOLTE", "TENTE"]);
+  if (config.roulette.outcomeItems.some((item) => !allowedOutcomes.has(item.id))) {
+    throw new Error("A roleta real aceita somente os resultados TICKET, VOLTE e TENTE.");
   }
   if (config.event.invitationUrl && config.event.invitationUrl !== "#") {
     try {
