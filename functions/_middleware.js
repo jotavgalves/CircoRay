@@ -42,7 +42,7 @@ export async function onRequest(context) {
     })
     .on("body", {
       element(element) {
-        element.append('<script type="module" src="/assets/js/boot.js?v=20260908-2"></script>', { html: true });
+        element.append('<script type="module" src="/assets/js/boot.js?v=20260909-2"></script>', { html: true });
       }
     })
     .transform(response);

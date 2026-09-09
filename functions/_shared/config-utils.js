@@ -81,6 +81,26 @@ export function normalizeConfig(input, previousRevision = 0) {
         game3: text(intro.game3, d.clown.introLines.game3)
       }
     },
+    hardcore: {
+      enabled: bool(c.hardcore?.enabled, d.hardcore.enabled),
+      angerThreshold: number(c.hardcore?.angerThreshold, d.hardcore.angerThreshold, 1, 100),
+      furyThreshold: number(c.hardcore?.furyThreshold, d.hardcore.furyThreshold, 1, 100),
+      initialAngerFromGrudgeMultiplier: number(c.hardcore?.initialAngerFromGrudgeMultiplier, d.hardcore.initialAngerFromGrudgeMultiplier, 0, 1),
+      grudgeDecayPerDay: number(c.hardcore?.grudgeDecayPerDay, d.hardcore.grudgeDecayPerDay, 0, 100),
+      angerDecayPerVisit: number(c.hardcore?.angerDecayPerVisit, d.hardcore.angerDecayPerVisit, 0, 100),
+      chaseDurationSeconds: number(c.hardcore?.chaseDurationSeconds, d.hardcore.chaseDurationSeconds, 3, 120),
+      chaseFuryDurationSeconds: number(c.hardcore?.chaseFuryDurationSeconds, d.hardcore.chaseFuryDurationSeconds, 3, 120),
+      chaseClownSpeed: number(c.hardcore?.chaseClownSpeed, d.hardcore.chaseClownSpeed, 0.2, 5),
+      chaseFurySpeed: number(c.hardcore?.chaseFurySpeed, d.hardcore.chaseFurySpeed, 0.2, 5),
+      defendWaves: Math.round(number(c.hardcore?.defendWaves, d.hardcore.defendWaves, 1, 50)),
+      defendFuryWaves: Math.round(number(c.hardcore?.defendFuryWaves, d.hardcore.defendFuryWaves, 1, 50)),
+      defendReactionMs: number(c.hardcore?.defendReactionMs, d.hardcore.defendReactionMs, 300, 10000),
+      defendFuryReactionMs: number(c.hardcore?.defendFuryReactionMs, d.hardcore.defendFuryReactionMs, 300, 10000),
+      introLine: text(c.hardcore?.introLine, d.hardcore.introLine),
+      hardcoreLine: text(c.hardcore?.hardcoreLine, d.hardcore.hardcoreLine),
+      chaseTitle: text(c.hardcore?.chaseTitle, d.hardcore.chaseTitle),
+      defendTitle: text(c.hardcore?.defendTitle, d.hardcore.defendTitle)
+    },
     roulette: {
       outcomeItems: weightedItems(c.roulette?.outcomeItems, d.roulette.outcomeItems)
     },
@@ -97,6 +117,9 @@ export function normalizeConfig(input, previousRevision = 0) {
   const allowedOutcomes = new Set(["TICKET", "VOLTE", "TENTE"]);
   if (config.roulette.outcomeItems.some((item) => !allowedOutcomes.has(item.id))) {
     throw new Error("A roleta real aceita somente os resultados TICKET, VOLTE e TENTE.");
+  }
+  if (config.hardcore.furyThreshold < config.hardcore.angerThreshold) {
+    throw new Error("O limite de fúria precisa ser igual ou maior que o limite do hardcore.");
   }
   if (config.event.invitationUrl && config.event.invitationUrl !== "#") {
     try {

@@ -40,7 +40,9 @@ function pick(list) {
   const values = Array.isArray(list) && list.length ? list : [];
   return values.length ? values[Math.floor(Math.random() * values.length)] : "";
 }
-
+function provoke(amount, reason) {
+  window.dispatchEvent(new CustomEvent("circoray:clown-provoked", { detail: { amount, reason } }));
+}
 function say(text, duration = 2200) {
   if (!text) return;
   const bubble = document.querySelector(".speech-bubble");
@@ -51,7 +53,6 @@ function say(text, duration = 2200) {
   clearTimeout(say.timer);
   say.timer = setTimeout(() => bubble.classList.remove("show"), duration);
 }
-
 function gameState() {
   const coupon = document.querySelector("#screen-coupon.active, #screen-win.active, .screen.active[id*='coupon']");
   if (coupon) return "win";
@@ -61,21 +62,15 @@ function gameState() {
   if (closed) return "lose";
   return "playing";
 }
-
-function clownTarget() {
-  return document.querySelector(".clown-img") || document.querySelector(".clown-wrap");
-}
-
+function clownTarget() { return document.querySelector(".clown-img") || document.querySelector(".clown-wrap"); }
 function showAngry(duration = 1400) {
   const target = clownTarget();
   const angryAsset = state.cfg.angryAsset || FALLBACK.angryAsset;
   if (!target || !angryAsset) return;
-
   state.angryToken += 1;
   const token = state.angryToken;
   clearTimeout(state.angryTimer);
   target.classList.add("cr-clown-angry-visible");
-
   if (target.tagName === "IMG") {
     if (!target.dataset.crNormalSrc) target.dataset.crNormalSrc = target.getAttribute("src") || "";
     target.setAttribute("src", angryAsset);
@@ -86,7 +81,6 @@ function showAngry(duration = 1400) {
     target.style.backgroundPosition = "center";
     target.style.backgroundRepeat = "no-repeat";
   }
-
   state.angryTimer = setTimeout(() => {
     if (token !== state.angryToken) return;
     target.classList.remove("cr-clown-angry-visible");
@@ -101,7 +95,6 @@ function showAngry(duration = 1400) {
     }
   }, duration);
 }
-
 function addEffect(kind) {
   const clown = clownTarget();
   if (!clown) return;
@@ -109,52 +102,36 @@ function addEffect(kind) {
   void clown.offsetWidth;
   clown.classList.add(kind === "rare" ? "cr-clown-glitch" : "cr-clown-shake");
   setTimeout(() => clown.classList.remove("cr-clown-shake", "cr-clown-glitch"), kind === "rare" ? 850 : 420);
-  if (navigator.vibrate) {
-    try { navigator.vibrate(kind === "rare" ? [45, 40, 80] : 35); } catch {}
-  }
+  if (navigator.vibrate) { try { navigator.vibrate(kind === "rare" ? [45, 40, 80] : 35); } catch {} }
 }
-
 function onTap() {
   const now = Date.now();
   state.totalTaps += 1;
   state.taps.push(now);
   state.taps = state.taps.filter((time) => now - time <= 1700);
-
   const mode = gameState();
   if (mode === "win") {
-    say(pick(state.cfg.winTapLines || FALLBACK.winTapLines));
-    addEffect("normal");
-    return;
+    provoke(2, "win-tap");
+    say(pick(state.cfg.winTapLines || FALLBACK.winTapLines)); addEffect("normal"); return;
   }
   if (mode === "lose") {
-    say(pick(state.cfg.loseTapLines || FALLBACK.loseTapLines));
-    addEffect("normal");
-    showAngry(1700);
-    return;
+    provoke(6, "lose-tap");
+    say(pick(state.cfg.loseTapLines || FALLBACK.loseTapLines)); addEffect("normal"); showAngry(1700); return;
   }
-
   if (state.totalTaps % 7 === 0) {
-    say(pick(state.cfg.rareTapLines || FALLBACK.rareTapLines), 3000);
-    addEffect("rare");
-    showAngry(2200);
-    return;
+    provoke(15, "rare-tap");
+    say(pick(state.cfg.rareTapLines || FALLBACK.rareTapLines), 3000); addEffect("rare"); showAngry(2200); return;
   }
-
   if (state.taps.length >= 3) {
-    say(pick(state.cfg.angryTapTaunts || FALLBACK.angryTapTaunts), 2500);
-    addEffect("normal");
-    showAngry(1700);
-    state.taps = [];
-    return;
+    provoke(12, "rapid-tap");
+    say(pick(state.cfg.angryTapTaunts || FALLBACK.angryTapTaunts), 2500); addEffect("normal"); showAngry(1700); state.taps = []; return;
   }
-
+  provoke(4, "tap");
   if (now - state.lastNormalReactionAt >= 1500) {
     state.lastNormalReactionAt = now;
-    say(pick(state.cfg.tapTaunts || FALLBACK.tapTaunts));
-    addEffect("normal");
+    say(pick(state.cfg.tapTaunts || FALLBACK.tapTaunts)); addEffect("normal");
   }
 }
-
 function installStyles() {
   const style = document.createElement("style");
   style.textContent = `
@@ -168,35 +145,21 @@ function installStyles() {
   `;
   document.head.appendChild(style);
 }
-
 function installTarget() {
   const target = clownTarget();
   if (!target) return false;
-  target.setAttribute("role", "button");
-  target.setAttribute("tabindex", "0");
-  target.setAttribute("aria-label", "Tocar no palhaço");
-  target.addEventListener("pointerup", (event) => {
-    event.preventDefault();
-    onTap();
-  });
-  target.addEventListener("keydown", (event) => {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      onTap();
-    }
-  });
+  target.setAttribute("role", "button"); target.setAttribute("tabindex", "0"); target.setAttribute("aria-label", "Tocar no palhaço");
+  target.addEventListener("pointerup", (event) => { event.preventDefault(); onTap(); });
+  target.addEventListener("keydown", (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onTap(); } });
   return true;
 }
-
 export function initClownInteractions(config = {}) {
   if (state.installed) return;
   state.installed = true;
   state.cfg = { ...FALLBACK, ...(config?.clown || {}) };
   installStyles();
   if (!installTarget()) {
-    const observer = new MutationObserver(() => {
-      if (installTarget()) observer.disconnect();
-    });
+    const observer = new MutationObserver(() => { if (installTarget()) observer.disconnect(); });
     observer.observe(document.body, { childList: true, subtree: true });
   }
 }
