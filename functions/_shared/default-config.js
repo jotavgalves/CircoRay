@@ -102,7 +102,7 @@ export const DEFAULT_CONFIG = {
     ]
   },
   audio: {
-    src: "/michak-whatsapp.mp3",
+    src: "/assets/audio/Trim_VtA_Twisted%20Carousel_1_1.mp3",
     volume: 0.3,
     loop: true
   }
