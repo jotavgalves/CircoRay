@@ -38,12 +38,23 @@ export async function onRequest(context) {
   if (url.pathname !== "/" && url.pathname !== "/index.html") return secure(response);
   if (!contentType.includes("text/html")) return secure(response);
 
-  const transformed = new HTMLRewriter()
+  const isTest = url.searchParams.has("test");
+  let rewriter = new HTMLRewriter()
     .on('script[src="./assets/js/game-legacy.js"]', { element(element) { element.remove(); } })
-    .on('script[src="/assets/js/game-legacy.js"]', { element(element) { element.remove(); } })
+    .on('script[src="/assets/js/game-legacy.js"]', { element(element) { element.remove(); } });
+
+  if (!isTest) {
+    rewriter = rewriter.on("head", {
+      element(element) {
+        element.append('<style id="cr-intro-lock-style">html.cr-intro-pending body{background:#050202!important}html.cr-intro-pending #app{visibility:hidden!important;opacity:0!important;pointer-events:none!important}</style><script>document.documentElement.classList.add("cr-intro-pending")</script>', { html: true });
+      }
+    });
+  }
+
+  const transformed = rewriter
     .on("body", {
       element(element) {
-        element.append('<script type="module" src="/assets/js/boot.js?v=20260909-9"></script>', { html: true });
+        element.append('<script type="module" src="/assets/js/boot.js?v=20260909-10"></script>', { html: true });
       }
     })
     .transform(response);
