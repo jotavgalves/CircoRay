@@ -51,6 +51,13 @@ async function boot() {
   const { initClownInteractions } = await import("/assets/js/clown-interactions.js?v=20260909-3");
   initClownInteractions(config);
 
+  const { initIntroAnalytics } = await import("/assets/js/intro-analytics.js?v=20260909-1");
+  if (!new URLSearchParams(location.search).has('test')) initIntroAnalytics();
+  else {
+    const { initTestController } = await import("/assets/js/test-controller.js?v=20260909-1");
+    initTestController();
+  }
+
   window.dispatchEvent(new CustomEvent("circoray:config-ready", { detail: config }));
 }
 
