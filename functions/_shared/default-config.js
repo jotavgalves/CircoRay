@@ -83,6 +83,26 @@ export const DEFAULT_CONFIG = {
       game3: "Gire a roda... e reze."
     }
   },
+  hardcore: {
+    enabled: true,
+    angerThreshold: 70,
+    furyThreshold: 90,
+    initialAngerFromGrudgeMultiplier: 0.2,
+    grudgeDecayPerDay: 2,
+    angerDecayPerVisit: 12,
+    chaseDurationSeconds: 14,
+    chaseFuryDurationSeconds: 17,
+    chaseClownSpeed: 1,
+    chaseFurySpeed: 1.3,
+    defendWaves: 8,
+    defendFuryWaves: 11,
+    defendReactionMs: 1450,
+    defendFuryReactionMs: 1050,
+    introLine: "VOCÊ ACHOU QUE TINHA ACABADO?",
+    hardcoreLine: "VOCÊ QUERIA MINHA ATENÇÃO. AGORA VOCÊ TEM.",
+    chaseTitle: "CORRA DO PALHAÇO",
+    defendTitle: "NÃO DEIXE ELE ENTRAR"
+  },
   roulette: {
     outcomeItems: [
       { "id": "TICKET", "label": "TICKET", "weight": 20, "enabled": true },
