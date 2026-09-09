@@ -85,8 +85,8 @@ export const DEFAULT_CONFIG = {
   },
   hardcore: {
     enabled: true,
-    angerThreshold: 70,
-    furyThreshold: 90,
+    angerThreshold: 45,
+    furyThreshold: 75,
     initialAngerFromGrudgeMultiplier: 0.2,
     grudgeDecayPerDay: 2,
     angerDecayPerVisit: 12,
