@@ -6,21 +6,17 @@ const MAX_ITEMS = 200;
 function text(value, fallback = "") {
   return typeof value === "string" ? value.slice(0, MAX_TEXT) : fallback;
 }
-
 function number(value, fallback, min = 0, max = 86400000) {
   const n = Number(value);
   return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
 }
-
 function bool(value, fallback = false) {
   return typeof value === "boolean" ? value : fallback;
 }
-
 function stringArray(value, fallback = []) {
   if (!Array.isArray(value)) return fallback;
   return value.slice(0, MAX_ITEMS).map((item) => text(item)).filter(Boolean);
 }
-
 function weightedItems(value, fallback) {
   if (!Array.isArray(value) || !value.length) return fallback;
   return value.slice(0, MAX_ITEMS).map((item, index) => ({
@@ -85,9 +81,6 @@ export function normalizeConfig(input, previousRevision = 0) {
       enabled: bool(c.hardcore?.enabled, d.hardcore.enabled),
       angerThreshold: number(c.hardcore?.angerThreshold, d.hardcore.angerThreshold, 1, 100),
       furyThreshold: number(c.hardcore?.furyThreshold, d.hardcore.furyThreshold, 1, 100),
-      initialAngerFromGrudgeMultiplier: number(c.hardcore?.initialAngerFromGrudgeMultiplier, d.hardcore.initialAngerFromGrudgeMultiplier, 0, 1),
-      grudgeDecayPerDay: number(c.hardcore?.grudgeDecayPerDay, d.hardcore.grudgeDecayPerDay, 0, 100),
-      angerDecayPerVisit: number(c.hardcore?.angerDecayPerVisit, d.hardcore.angerDecayPerVisit, 0, 100),
       chaseDurationSeconds: number(c.hardcore?.chaseDurationSeconds, d.hardcore.chaseDurationSeconds, 3, 120),
       chaseFuryDurationSeconds: number(c.hardcore?.chaseFuryDurationSeconds, d.hardcore.chaseFuryDurationSeconds, 3, 120),
       chaseClownSpeed: number(c.hardcore?.chaseClownSpeed, d.hardcore.chaseClownSpeed, 0.2, 5),

@@ -11,14 +11,10 @@ function loadClassicScript(src) {
       existing.addEventListener("error", () => reject(new Error(`Falha ao carregar ${src}`)), { once: true });
       return;
     }
-
     const script = document.createElement("script");
     script.src = src;
     script.defer = false;
-    script.onload = () => {
-      legacyLoaded = true;
-      resolve();
-    };
+    script.onload = () => { legacyLoaded = true; resolve(); };
     script.onerror = () => reject(new Error(`Falha ao carregar ${src}`));
     document.body.appendChild(script);
   });
@@ -26,17 +22,15 @@ function loadClassicScript(src) {
 
 async function boot() {
   const configPromise = loadRuntimeConfig();
-
   await loadClassicScript("/assets/js/game-legacy.js");
   legacyLoaded = true;
-
   const config = await configPromise;
   applyStaticPageConfig(config);
 
-  const { applyLegacyGameConfig } = await import("/assets/js/game-config-adapter.js?v=20260909-1");
+  const { applyLegacyGameConfig } = await import("/assets/js/game-config-adapter.js?v=20260909-3");
   applyLegacyGameConfig(config);
 
-  const { initHardcoreMode } = await import("/assets/js/hardcore-mode.js?v=20260909-2");
+  const { initHardcoreMode } = await import("/assets/js/hardcore-mode.js?v=20260909-3");
   initHardcoreMode(config);
 
   const { initHardcoreDiscovery } = await import("/assets/js/hardcore-discovery.js?v=20260909-1");

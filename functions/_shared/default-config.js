@@ -69,14 +69,8 @@ export const DEFAULT_CONFIG = {
       "ACHOU QUE IA SER FÁCIL? NÃO SE ANIME.",
       "PARABÉNS... EU NÃO ESPERAVA ESSA."
     ],
-    winTapLines: [
-      "GANHOU E AINDA VEIO ME PERTURBAR?",
-      "NÃO SE ACOSTUME."
-    ],
-    loseTapLines: [
-      "PERDEU E VEIO PEDIR CARINHO?",
-      "EU AVISEI."
-    ],
+    winTapLines: ["GANHOU E AINDA VEIO ME PERTURBAR?", "NÃO SE ACOSTUME."],
+    loseTapLines: ["PERDEU E VEIO PEDIR CARINHO?", "EU AVISEI."],
     introLines: {
       game1: "Vamos ver se sua pontaria presta...",
       game2: "Corra, corra... se for capaz.",
@@ -87,9 +81,6 @@ export const DEFAULT_CONFIG = {
     enabled: true,
     angerThreshold: 45,
     furyThreshold: 75,
-    initialAngerFromGrudgeMultiplier: 0.2,
-    grudgeDecayPerDay: 2,
-    angerDecayPerVisit: 12,
     chaseDurationSeconds: 14,
     chaseFuryDurationSeconds: 17,
     chaseClownSpeed: 1,

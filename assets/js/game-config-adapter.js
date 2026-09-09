@@ -14,6 +14,22 @@ function replaceArrayGlobal(name, value) {
   if (Array.isArray(value) && value.length) window[name] = [...value];
 }
 
+function difficultyMultiplier(normalHardcore = 0.72, fury = 0.58) {
+  if (window.__circorayHardcoreFury) return fury;
+  if (window.__circorayHardcoreArmed) return normalHardcore;
+  return 1;
+}
+
+function hardenedRouletteItems(items) {
+  if (!window.__circorayHardcoreArmed) return items;
+  const fury = Boolean(window.__circorayHardcoreFury);
+  return (items || []).map((item) => {
+    if (item.id === "TICKET") return { ...item, weight: Number(item.weight) * (fury ? 0.5 : 0.68) };
+    if (item.id === "VOLTE") return { ...item, weight: Number(item.weight) * (fury ? 1.32 : 1.18) };
+    return item;
+  });
+}
+
 export function applyLegacyGameConfig(config) {
   if (!config) return;
   window.CIRCO_CONFIG = config;
@@ -28,9 +44,9 @@ export function applyLegacyGameConfig(config) {
 
   if (Array.isArray(config.roulette?.outcomeItems) && typeof window.chooseWheelOutcome === "function") {
     window.chooseWheelOutcome = function chooseConfiguredWheelOutcome() {
-      // A quinta tentativa é a regra de segurança do jogo: ela continua forçando TICKET.
       if (window.fifthTryMode) return "TICKET";
-      const id = weightedPick(config.roulette.outcomeItems)?.id;
+      const source = hardenedRouletteItems(config.roulette.outcomeItems);
+      const id = weightedPick(source)?.id;
       return id === "TICKET" || id === "VOLTE" || id === "TENTE" ? id : "TENTE";
     };
   }
@@ -61,7 +77,8 @@ export function applyLegacyGameConfig(config) {
     const originalInitGame1 = window.initGame1;
     window.initGame1 = function configuredInitGame1() {
       const result = originalInitGame1.apply(this, arguments);
-      if (window.g1) window.g1.timeLeft = Number(config.game?.game1TimeSeconds || 20);
+      const base = Number(config.game?.game1TimeSeconds || 20);
+      if (window.g1) window.g1.timeLeft = Math.max(3, Math.ceil(base * difficultyMultiplier(0.72, 0.58)));
       if (typeof window.updateG1Timer === "function") window.updateG1Timer();
       return result;
     };
@@ -71,11 +88,17 @@ export function applyLegacyGameConfig(config) {
     const originalInitGame2 = window.initGame2;
     window.initGame2 = function configuredInitGame2() {
       const result = originalInitGame2.apply(this, arguments);
-      if (window.g2) window.g2.timeLeft = Number(config.game?.game2TimeSeconds || 12);
+      const base = Number(config.game?.game2TimeSeconds || 12);
+      if (window.g2) window.g2.timeLeft = Math.max(3, Math.ceil(base * difficultyMultiplier(0.76, 0.62)));
       if (typeof window.updateG2Timer === "function") window.updateG2Timer();
       return result;
     };
   }
+
+  window.addEventListener("circoray:hardcore-armed", () => {
+    document.querySelector("#screen-game1.active") && window.updateG1Timer?.();
+    document.querySelector("#screen-game2.active") && window.updateG2Timer?.();
+  });
 
   if (typeof window.rebuildWheelLabels === "function") window.rebuildWheelLabels();
   else if (typeof window.refreshWheel === "function") window.refreshWheel();
