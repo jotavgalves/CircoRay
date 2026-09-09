@@ -1,6 +1,6 @@
 const FALLBACK = {
-  event: { title: "Parque dos Horrores — Convite", invitationUrl: "#", invitationButtonText: "TROCAR PELO CONVITE" },
-  page: {},
+  event: { title: "Circo da Lua Sangrenta — Convite", invitationUrl: "#", invitationButtonText: "TROCAR PELO CONVITE" },
+  page: { parkTitle: "CIRCO DA LUA SANGRENTA" },
   audio: { src: "/michak-whatsapp.mp3", volume: 0.3, loop: true }
 };
 
@@ -23,7 +23,11 @@ function setText(id, value) {
 }
 
 export function applyStaticPageConfig(config) {
-  if (config?.event?.title) document.title = config.event.title;
+  document.title = config?.event?.title || "Circo da Lua Sangrenta — Convite";
+
+  const parkTitle = document.querySelector(".park-title");
+  if (parkTitle) parkTitle.textContent = config?.page?.parkTitle || "CIRCO DA LUA SANGRENTA";
+
   const link = document.getElementById("driveLink");
   if (link) {
     if (config?.event?.invitationUrl && config.event.invitationUrl !== "#") link.href = config.event.invitationUrl;
