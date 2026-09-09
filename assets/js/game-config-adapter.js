@@ -10,17 +10,6 @@ function weightedPick(items) {
   return active.at(-1);
 }
 
-function expandWeighted(items, targetSlots = 100) {
-  const active = (items || []).filter((item) => item.enabled !== false && Number(item.weight) > 0);
-  const total = active.reduce((sum, item) => sum + Number(item.weight), 0);
-  if (!active.length || total <= 0) return [];
-  const raw = active.map((item) => ({ item, exact: (Number(item.weight) / total) * targetSlots }));
-  const slots = raw.map(({ item, exact }) => ({ item, count: Math.floor(exact), remainder: exact - Math.floor(exact) }));
-  let missing = targetSlots - slots.reduce((sum, slot) => sum + slot.count, 0);
-  [...slots].sort((a, b) => b.remainder - a.remainder).forEach((slot) => { if (missing-- > 0) slot.count += 1; });
-  return slots.flatMap(({ item, count }) => Array.from({ length: count }, () => item.label));
-}
-
 function replaceArrayGlobal(name, value) {
   if (Array.isArray(value) && value.length) window[name] = [...value];
 }
@@ -37,14 +26,12 @@ export function applyLegacyGameConfig(config) {
     window.INTRO_LINES = { ...window.INTRO_LINES, ...config.clown.introLines };
   }
 
-  const normalLabels = expandWeighted(config.roulette?.normalItems);
-  const finalLabels = expandWeighted(config.roulette?.finalItems);
-  if (normalLabels.length) window.NORMAL_WHEEL_LABELS = normalLabels;
-  if (finalLabels.length) window.FINAL_WHEEL_LABELS = finalLabels;
-
   if (Array.isArray(config.roulette?.outcomeItems) && typeof window.chooseWheelOutcome === "function") {
     window.chooseWheelOutcome = function chooseConfiguredWheelOutcome() {
-      return weightedPick(config.roulette.outcomeItems)?.id || "TENTE";
+      // A quinta tentativa é a regra de segurança do jogo: ela continua forçando TICKET.
+      if (window.fifthTryMode) return "TICKET";
+      const id = weightedPick(config.roulette.outcomeItems)?.id;
+      return id === "TICKET" || id === "VOLTE" || id === "TENTE" ? id : "TENTE";
     };
   }
 
@@ -90,7 +77,8 @@ export function applyLegacyGameConfig(config) {
     };
   }
 
-  if (typeof window.refreshWheel === "function") window.refreshWheel();
+  if (typeof window.rebuildWheelLabels === "function") window.rebuildWheelLabels();
+  else if (typeof window.refreshWheel === "function") window.refreshWheel();
   else if (typeof window.renderWheel === "function") window.renderWheel();
   else if (typeof window.drawWheel === "function") window.drawWheel();
 }
