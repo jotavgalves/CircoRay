@@ -36,10 +36,13 @@ async function boot() {
   const { applyLegacyGameConfig } = await import("/assets/js/game-config-adapter.js?v=20260909-1");
   applyLegacyGameConfig(config);
 
-  const { initRanking } = await import("/assets/js/ranking.js?v=20260908-1");
+  const { initHardcoreMode } = await import("/assets/js/hardcore-mode.js?v=20260909-1");
+  initHardcoreMode(config);
+
+  const { initRanking } = await import("/assets/js/ranking.js?v=20260909-1");
   initRanking();
 
-  const { initClownInteractions } = await import("/assets/js/clown-interactions.js?v=20260909-1");
+  const { initClownInteractions } = await import("/assets/js/clown-interactions.js?v=20260909-2");
   initClownInteractions(config);
 
   window.dispatchEvent(new CustomEvent("circoray:config-ready", { detail: config }));
