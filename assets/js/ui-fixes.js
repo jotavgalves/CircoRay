@@ -4,7 +4,7 @@ export function initUiFixes(){
 
   const style=document.createElement('style');
   style.textContent=`
-    /* ROLETA: o ponteiro fica sobre o centro de uma fatia, não sobre uma divisória. */
+    /* ROLETA: ponteiro no centro de uma fatia, textos uniformes e centro menos congestionado. */
     .wheel{
       background:conic-gradient(from -30deg,
         var(--ink) 0deg 60deg,
@@ -39,7 +39,48 @@ export function initUiFixes(){
     }
     .captive{width:27%!important;max-width:88px!important}
 
-    /* A fala precisa parecer sair do personagem. */
+    /* Palhaço: raiva muda luz/expressão visual, nunca a posição corporal. */
+    .clown-wrap{transform:none!important}
+    .clown-img.cr-clown-hate-aura,
+    .clown-img.cr-clown-angry-visible{
+      transform:none!important;
+      transform-origin:center bottom!important;
+    }
+    .clown-img.cr-clown-hate-aura{
+      animation:crFixedHateAura 1.05s ease-in-out infinite alternate!important;
+    }
+    body.cr-hardcore-fury .clown-img.cr-clown-hate-aura{
+      animation-duration:.48s!important;
+    }
+    @keyframes crFixedHateAura{
+      from{filter:drop-shadow(0 0 8px rgba(255,0,0,.78)) drop-shadow(0 0 20px rgba(150,0,0,.64)) contrast(1.08) saturate(1.08)}
+      to{filter:drop-shadow(0 0 14px rgba(255,20,20,1)) drop-shadow(0 0 34px rgba(170,0,0,.88)) drop-shadow(0 0 52px rgba(80,0,0,.55)) contrast(1.14) saturate(1.2)}
+    }
+
+    /* Atmosfera hardcore: cenário escurece; o vermelho se concentra no palhaço e nas bordas. */
+    body.cr-hardcore-armed::after{
+      background:
+        radial-gradient(circle at 20% 31%,rgba(255,0,0,.16) 0,rgba(120,0,0,.10) 13%,transparent 30%),
+        radial-gradient(ellipse at center,transparent 34%,rgba(55,0,0,.20) 66%,rgba(20,0,0,.62) 100%)!important;
+      box-shadow:inset 0 0 95px rgba(85,0,0,.5)!important;
+    }
+    body.cr-hardcore-armed #app{filter:brightness(.92) saturate(.86) contrast(1.08)!important}
+    body.cr-hardcore-armed .stage{box-shadow:inset 0 0 38px rgba(70,0,0,.45)!important}
+    body.cr-hardcore-armed .clown-wrap::before{
+      content:"";
+      position:absolute;
+      left:4%;right:4%;top:7%;bottom:2%;
+      z-index:-1;
+      border-radius:48%;
+      background:radial-gradient(circle,rgba(255,0,0,.28),rgba(135,0,0,.12) 45%,transparent 72%);
+      filter:blur(15px);
+      animation:crLocalHatePulse 1.05s ease-in-out infinite alternate;
+      pointer-events:none;
+    }
+    body.cr-hardcore-fury .clown-wrap::before{animation-duration:.48s;background:radial-gradient(circle,rgba(255,25,25,.38),rgba(155,0,0,.16) 44%,transparent 72%)}
+    @keyframes crLocalHatePulse{to{opacity:.58;filter:blur(22px)}}
+
+    /* A fala precisa parecer sair da cabeça do personagem. */
     .speech-bubble{
       top:2%!important;
       left:68%!important;
@@ -50,18 +91,18 @@ export function initUiFixes(){
     .speech-bubble::after{left:11px!important;bottom:-12px!important}
     .speech-bubble::before{left:13px!important;bottom:-7px!important}
 
-    /* A ação do jogo é GIRAR; ranking é navegação secundária. */
+    /* Ação primária clara. */
     .spin-btn{
       min-width:122px!important;
       padding:13px 28px!important;
       font-size:18px!important;
-      opacity:1;
       filter:none!important;
     }
     .spin-btn:not(:disabled){
-      background:linear-gradient(180deg,#a91414,#5a0000)!important;
+      opacity:1!important;
+      background:linear-gradient(180deg,#b41717,#610000)!important;
       border-color:#180000!important;
-      box-shadow:0 6px 0 #120707,0 9px 18px rgba(0,0,0,.55),0 0 14px rgba(150,0,0,.22)!important;
+      box-shadow:0 6px 0 #120707,0 9px 18px rgba(0,0,0,.55),0 0 16px rgba(180,0,0,.28)!important;
       color:#fff!important;
     }
     .spin-btn:disabled{opacity:.42!important;filter:grayscale(.2)!important}
@@ -69,12 +110,12 @@ export function initUiFixes(){
       padding:8px 11px!important;
       font-size:10px!important;
       border-width:1px!important;
-      opacity:.78!important;
+      opacity:.72!important;
       box-shadow:0 3px 0 #0e0908,0 5px 12px rgba(0,0,0,.35)!important;
     }
     #cr-ranking-btn:hover,#cr-ranking-btn:focus-visible{opacity:1!important}
 
-    /* Medidor de raiva: usa o espaço vazio da topbar em vez da área de jogo. */
+    /* Medidor de raiva compacto no espaço vazio da topbar. */
     #cr-hardcore-meter{
       top:18px!important;
       bottom:auto!important;
@@ -95,7 +136,6 @@ export function initUiFixes(){
     #cr-hardcore-meter .crhm-status{display:none!important}
     #cr-hardcore-meter.armed{width:104px!important;border-color:#c40000!important}
 
-    /* Mobile: mais respiro vertical e roleta ligeiramente menor. */
     @media(max-width:600px){
       #screen-game3{gap:7px!important;padding-top:6px!important;padding-bottom:8px!important}
       .wheel-wrap{width:min(76vw,276px)!important}
