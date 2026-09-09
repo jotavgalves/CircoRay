@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 720" role="img" aria-labelledby="title desc">
+  <title id="title">Palhaço Carmesim em seu guichê</title>
+  <desc id="desc">Ilustração de um guichê de parque macabro com o Palhaço Carmesim ao centro.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#160304"/>
+      <stop offset=".55" stop-color="#260607"/>
+      <stop offset="1" stop-color="#080202"/>
+    </linearGradient>
+    <linearGradient id="wood" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#2a160d"/>
+      <stop offset=".18" stop-color="#6a321b"/>
+      <stop offset=".5" stop-color="#3b1c10"/>
+      <stop offset=".82" stop-color="#6b351d"/>
+      <stop offset="1" stop-color="#26130b"/>
+    </linearGradient>
+    <linearGradient id="red" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8f1016"/>
+      <stop offset="1" stop-color="#350305"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="38%" r="48%">
+      <stop offset="0" stop-color="#a00000" stop-opacity=".38"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#000" flood-opacity=".72"/>
+    </filter>
+    <filter id="redGlow" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="0" stdDeviation="7" flood-color="#b00000" flood-opacity=".58"/>
+    </filter>
+    <clipPath id="windowClip"><rect x="72" y="166" width="336" height="330" rx="10"/></clipPath>
+  </defs>
+
+  <rect width="480" height="720" rx="24" fill="#090202"/>
+  <rect x="16" y="16" width="448" height="688" rx="22" fill="url(#bg)" stroke="#8a5d23" stroke-width="3"/>
+  <rect x="24" y="24" width="432" height="672" rx="18" fill="none" stroke="#2a140a" stroke-width="8"/>
+  <rect x="34" y="34" width="412" height="652" rx="16" fill="none" stroke="#9f1118" stroke-opacity=".32" stroke-width="2"/>
+
+  <path d="M48 160 Q80 68 240 48 Q400 68 432 160 L410 184 Q372 108 240 92 Q108 108 70 184 Z" fill="url(#wood)" stroke="#9c6a28" stroke-width="4" filter="url(#shadow)"/>
+  <path d="M92 148 Q130 94 240 82 Q350 94 388 148" fill="none" stroke="#4d220f" stroke-width="18" stroke-linecap="round"/>
+  <path d="M108 146 Q145 106 240 98 Q335 106 372 146" fill="none" stroke="#b07b31" stroke-opacity=".6" stroke-width="3"/>
+  <circle cx="240" cy="83" r="35" fill="#350405" stroke="#9b6b2b" stroke-width="4"/>
+  <path d="M240 58 L247 76 L266 76 L251 88 L256 106 L240 95 L224 106 L229 88 L214 76 L233 76 Z" fill="#c69845" stroke="#5a2b12" stroke-width="2"/>
+
+  <g opacity=".95">
+    <circle cx="62" cy="186" r="10" fill="#ffb04a"/><circle cx="62" cy="186" r="4" fill="#fff2b5"/>
+    <circle cx="62" cy="258" r="10" fill="#ffb04a"/><circle cx="62" cy="258" r="4" fill="#fff2b5"/>
+    <circle cx="62" cy="330" r="10" fill="#ffb04a"/><circle cx="62" cy="330" r="4" fill="#fff2b5"/>
+    <circle cx="418" cy="186" r="10" fill="#ffb04a"/><circle cx="418" cy="186" r="4" fill="#fff2b5"/>
+    <circle cx="418" cy="258" r="10" fill="#ffb04a"/><circle cx="418" cy="258" r="4" fill="#fff2b5"/>
+    <circle cx="418" cy="330" r="10" fill="#ffb04a"/><circle cx="418" cy="330" r="4" fill="#fff2b5"/>
+  </g>
+
+  <rect x="72" y="166" width="336" height="330" rx="10" fill="#060202" stroke="#5d2a14" stroke-width="5"/>
+  <rect x="76" y="170" width="328" height="322" rx="8" fill="url(#glow)"/>
+  <g clip-path="url(#windowClip)">
+    <path d="M86 180 C126 230 142 232 168 208 L168 166 L86 166 Z" fill="#651016" opacity=".92"/>
+    <path d="M394 180 C354 230 338 232 312 208 L312 166 L394 166 Z" fill="#651016" opacity=".92"/>
+    <path d="M86 180 C126 230 142 232 168 208" fill="none" stroke="#a97a33" stroke-opacity=".45" stroke-width="3"/>
+    <path d="M394 180 C354 230 338 232 312 208" fill="none" stroke="#a97a33" stroke-opacity=".45" stroke-width="3"/>
+    <circle cx="240" cy="330" r="128" fill="#6c0000" opacity=".12"/>
+    <image href="/assets/images/clown/clown-angry.svg" x="94" y="188" width="292" height="340" preserveAspectRatio="xMidYMax meet" filter="url(#redGlow)"/>
+  </g>
+
+  <rect x="48" y="486" width="384" height="36" rx="8" fill="#3b1d0e" stroke="#160a05" stroke-width="5"/>
+  <rect x="36" y="505" width="408" height="166" rx="10" fill="url(#wood)" stroke="#1b0c06" stroke-width="6" filter="url(#shadow)"/>
+  <path d="M54 520 H426" stroke="#9d6032" stroke-opacity=".35" stroke-width="4"/>
+  <path d="M66 527 V650 M112 527 V650 M158 527 V650 M204 527 V650 M250 527 V650 M296 527 V650 M342 527 V650 M388 527 V650" stroke="#1e0d07" stroke-opacity=".55" stroke-width="4"/>
+  <rect x="82" y="558" width="316" height="74" rx="8" fill="url(#red)" stroke="#1d0a06" stroke-width="5"/>
+  <rect x="91" y="567" width="298" height="56" rx="5" fill="none" stroke="#b47b30" stroke-opacity=".7" stroke-width="2"/>
+  <text x="240" y="602" text-anchor="middle" dominant-baseline="middle" fill="#f7ead3" font-family="Georgia, serif" font-size="26" font-weight="700" letter-spacing="2">PALHAÇO CARMESIM</text>
+
+  <g fill="#a66d2d" opacity=".8">
+    <path d="M56 122 q18 -18 36 0 q-18 8 -36 0Z"/><path d="M424 122 q-18 -18 -36 0 q18 8 36 0Z"/>
+    <circle cx="43" cy="532" r="5"/><circle cx="437" cy="532" r="5"/><circle cx="43" cy="652" r="5"/><circle cx="437" cy="652" r="5"/>
+  </g>
+</svg>
