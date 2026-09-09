@@ -85,11 +85,21 @@ export function initUiFixes(){
   }
   function isFinalScreen(){return Boolean(document.querySelector('#screen-final.active,#screen-coupon.active,#screen-win.active,#screen-lose.active,#screen-closed.active,.screen.active[id*="final"],.screen.active[id*="coupon"],.screen.active[id*="win"],.screen.active[id*="lose"],.screen.active[id*="closed"]'))}
   function syncRanking(){const btn=document.getElementById('cr-ranking-btn');if(!btn)return;btn.classList.toggle('cr-ranking-final-visible',isFinalScreen())}
-  fixWheel(); syncRanking();
+
+  fixWheel();
+  syncRanking();
   [80,250,700,1400].forEach(ms=>setTimeout(()=>{fixWheel();syncRanking()},ms));
-  const observer=new MutationObserver(()=>{fixWheel();syncRanking()});
-  observer.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['style','class']});
-  window.addEventListener('resize',fixWheel);
+
+  const game3=document.querySelector('#screen-game3');
+  if(game3){
+    const wheelObserver=new MutationObserver(()=>fixWheel());
+    wheelObserver.observe(game3,{childList:true,subtree:true});
+  }
+
+  const screenObserver=new MutationObserver(()=>syncRanking());
+  document.querySelectorAll('.screen').forEach(screen=>screenObserver.observe(screen,{attributes:true,attributeFilter:['class']}));
+
+  window.addEventListener('resize',fixWheel,{passive:true});
   window.addEventListener('circoray:config-ready',()=>{fixWheel();syncRanking()});
   window.addEventListener('circoray:hardcore-armed',fixWheel);
   window.CIRCO_FIX_WHEEL_LABELS=fixWheel;
