@@ -21,7 +21,7 @@ function installIntro(){
 
   const root=document.createElement('div');
   root.id='cr-carmesim-intro';
-  root.innerHTML=`<div class="crc-card"><div class="crc-stage"><img class="crc-scene" src="/assets/images/clown/palhaco-carmesim-guiche.webp" alt="Palhaço Carmesim em seu guichê"></div><div class="crc-copy"><div class="crc-kicker">MESTRE DO PARQUE</div><h1>Palhaço Carmesim</h1><p>“Pode me chamar de <strong>Palhaço Carmesim</strong>. Este parque é meu. Os jogos também.”</p><p>“Ganhe seus tickets e talvez eu deixe você ir. Só existe uma recomendação: não teste a minha paciência.”</p><button type="button">ENTRAR NO PARQUE</button></div></div>`;
+  root.innerHTML=`<div class="crc-card"><div class="crc-stage"><img class="crc-scene" src="/assets/images/clown/palhaco-carmesim-guiche.svg?v=20260909-1" alt="Palhaço Carmesim em seu guichê"></div><div class="crc-copy"><div class="crc-kicker">MESTRE DO PARQUE</div><h1>Palhaço Carmesim</h1><p>“Pode me chamar de <strong>Palhaço Carmesim</strong>. Este parque é meu. Os jogos também.”</p><p>“Ganhe seus tickets e talvez eu deixe você ir. Só existe uma recomendação: não teste a minha paciência.”</p><button type="button">ENTRAR NO PARQUE</button></div></div>`;
   document.body.appendChild(root);
   root.querySelector('button').addEventListener('click',()=>{
     const animation=root.animate([{opacity:1},{opacity:0}],{duration:320,easing:'ease',fill:'forwards'});
