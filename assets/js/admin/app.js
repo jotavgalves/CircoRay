@@ -20,6 +20,58 @@ let hydrating = false;
 
 function clone(value) { return JSON.parse(JSON.stringify(value)); }
 
+function injectHardcoreAdmin() {
+  const nav = document.getElementById("sectionNav");
+  if (!nav || nav.querySelector('[data-section="hardcore"]')) return;
+  const button = document.createElement("button");
+  button.className = "nav-item";
+  button.dataset.section = "hardcore";
+  button.textContent = "Hardcore e memória";
+  const audioButton = nav.querySelector('[data-section="audio"]');
+  nav.insertBefore(button, audioButton || null);
+
+  const content = document.querySelector(".content");
+  const audioPanel = content?.querySelector('[data-panel="audio"]');
+  const section = document.createElement("section");
+  section.className = "panel-section";
+  section.dataset.panel = "hardcore";
+  section.innerHTML = `
+    <div class="section-heading"><div><h3>Hardcore e memória do palhaço</h3><p>Quando a raiva ultrapassa o limite, depois dos 3 jogos normais entram dois jogos extras exclusivos.</p></div></div>
+    <div class="card grid three">
+      <label class="toggle-field"><input id="hardcoreEnabled" type="checkbox"><span class="toggle"></span><span>Ativar rota hardcore</span></label>
+      <label class="field"><span>Raiva para ativar hardcore</span><input data-number-bind="hardcore.angerThreshold" type="number" min="1" max="100" step="1"></label>
+      <label class="field"><span>Raiva para modo fúria</span><input data-number-bind="hardcore.furyThreshold" type="number" min="1" max="100" step="1"></label>
+      <label class="field"><span>Raiva perdida ao voltar</span><input data-number-bind="hardcore.angerDecayPerVisit" type="number" min="0" max="100" step="1"></label>
+      <label class="field"><span>Rancor perdido por dia</span><input data-number-bind="hardcore.grudgeDecayPerDay" type="number" min="0" max="100" step="1"></label>
+      <label class="field"><span>Quanto do rancor vira raiva ao voltar (0–1)</span><input data-number-bind="hardcore.initialAngerFromGrudgeMultiplier" type="number" min="0" max="1" step="0.05"></label>
+    </div>
+    <div class="section-heading"><div><h3>Jogo 4 — Corra do Palhaço</h3><p>O jogador arrasta o ponto pelo picadeiro enquanto o palhaço persegue.</p></div></div>
+    <div class="card grid three">
+      <label class="field"><span>Título</span><input data-bind="hardcore.chaseTitle" type="text"></label>
+      <label class="field"><span>Duração hardcore (s)</span><input data-number-bind="hardcore.chaseDurationSeconds" type="number" min="3" step="1"></label>
+      <label class="field"><span>Duração fúria (s)</span><input data-number-bind="hardcore.chaseFuryDurationSeconds" type="number" min="3" step="1"></label>
+      <label class="field"><span>Velocidade palhaço</span><input data-number-bind="hardcore.chaseClownSpeed" type="number" min="0.2" max="5" step="0.1"></label>
+      <label class="field"><span>Velocidade palhaço na fúria</span><input data-number-bind="hardcore.chaseFurySpeed" type="number" min="0.2" max="5" step="0.1"></label>
+    </div>
+    <div class="section-heading"><div><h3>Jogo 5 — Não Deixe Ele Entrar</h3><p>Porta, janela, alçapão e ventilação dão sinais. O jogador precisa bloquear a entrada correta.</p></div></div>
+    <div class="card grid three">
+      <label class="field"><span>Título</span><input data-bind="hardcore.defendTitle" type="text"></label>
+      <label class="field"><span>Ondas hardcore</span><input data-number-bind="hardcore.defendWaves" type="number" min="1" max="50" step="1"></label>
+      <label class="field"><span>Ondas fúria</span><input data-number-bind="hardcore.defendFuryWaves" type="number" min="1" max="50" step="1"></label>
+      <label class="field"><span>Tempo de reação hardcore (ms)</span><input data-number-bind="hardcore.defendReactionMs" type="number" min="300" step="50"></label>
+      <label class="field"><span>Tempo de reação fúria (ms)</span><input data-number-bind="hardcore.defendFuryReactionMs" type="number" min="300" step="50"></label>
+    </div>
+    <div class="section-heading"><div><h3>Falas da entrada hardcore</h3></div></div>
+    <div class="card grid two">
+      <label class="field"><span>Primeira frase</span><input data-bind="hardcore.introLine" type="text"></label>
+      <label class="field"><span>Segunda frase</span><textarea data-bind="hardcore.hardcoreLine" rows="3"></textarea></label>
+    </div>`;
+  if (content) content.insertBefore(section, audioPanel || null);
+}
+
+injectHardcoreAdmin();
+const hardcoreEnabled = document.getElementById("hardcoreEnabled");
+
 function setStatus(message, type = "success", persistent = false) {
   statusBar.hidden = false;
   statusBar.className = `status-bar ${type}`;
@@ -39,6 +91,8 @@ function setStorageState(ready, detail = "") {
 function collectConfig() {
   let next = readSimpleFields(currentConfig || {});
   next = readRouletteEditors(next);
+  next.hardcore = next.hardcore || {};
+  if (hardcoreEnabled) next.hardcore.enabled = hardcoreEnabled.checked;
   return next;
 }
 
@@ -68,6 +122,7 @@ function hydrate(config) {
   renderRouletteEditors(currentConfig, markDirty);
   const angryPreview = document.getElementById("angryClownPreview");
   if (angryPreview && currentConfig.clown?.angryAsset) angryPreview.src = currentConfig.clown.angryAsset;
+  if (hardcoreEnabled) hardcoreEnabled.checked = currentConfig.hardcore?.enabled !== false;
   jsonEditor.value = JSON.stringify(currentConfig, null, 2);
   updateMeta(currentConfig);
   hydrating = false;
@@ -223,6 +278,7 @@ document.getElementById("sectionNav").addEventListener("click", (event) => {
 });
 
 bindDirtyEvents(markDirty);
+hardcoreEnabled?.addEventListener("change", markDirty);
 window.addEventListener("beforeunload", (event) => {
   if (!dirty) return;
   event.preventDefault();
