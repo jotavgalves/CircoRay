@@ -22,8 +22,10 @@ export function initUiFixes(){
     body.cr-hardcore-fury .clown-wrap::before{animation-duration:.48s;background:radial-gradient(circle,rgba(255,25,25,.38),rgba(155,0,0,.16) 44%,transparent 72%)}
     @keyframes crLocalHatePulse{to{opacity:.58;filter:blur(22px)}}
 
-    .speech-bubble{top:2%!important;left:68%!important;width:48%!important;max-width:205px!important;padding:8px 11px!important}
-    .speech-bubble::after{left:11px!important;bottom:-12px!important}.speech-bubble::before{left:13px!important;bottom:-7px!important}
+    .speech-bubble{top:3%!important;left:72%!important;width:46%!important;max-width:220px!important;padding:10px 13px!important;border:2px solid #1a0d08!important;border-radius:14px 14px 14px 9px!important;background:linear-gradient(180deg,#f2e8d5 0%,#e6d7be 100%)!important;box-shadow:0 7px 16px rgba(0,0,0,.38)!important}
+    .speech-bubble::after{content:""!important;position:absolute!important;left:-15px!important;bottom:7px!important;width:24px!important;height:22px!important;background:#e8dbc3!important;border-left:2px solid #1a0d08!important;border-bottom:2px solid #1a0d08!important;border-right:0!important;border-top:0!important;transform:skewX(-28deg) rotate(18deg)!important;clip-path:polygon(100% 0,100% 100%,0 100%)!important;z-index:0!important}
+    .speech-bubble::before{content:""!important;position:absolute!important;left:-8px!important;bottom:10px!important;width:15px!important;height:14px!important;background:#e8dbc3!important;border:0!important;transform:none!important;z-index:1!important}
+    .speech-bubble p{position:relative!important;z-index:2!important}
 
     .spin-btn{min-width:122px!important;padding:13px 28px!important;font-size:18px!important;filter:none!important}
     .spin-btn:not(:disabled){opacity:1!important;background:linear-gradient(180deg,#b41717,#610000)!important;border-color:#180000!important;box-shadow:0 6px 0 #120707,0 9px 18px rgba(0,0,0,.55),0 0 16px rgba(180,0,0,.28)!important;color:#fff!important}
@@ -38,11 +40,13 @@ export function initUiFixes(){
       .wheel-wrap{width:min(78vw,286px)!important}
       .wheel .slice-label{width:74px!important;font-size:10.5px!important;line-height:1.04!important}
       .captive{width:38%!important;max-width:108px!important;max-height:108px!important}
-      .speech-bubble{left:66%!important;top:1%!important;width:51%!important;max-width:176px!important;font-size:11px!important}
+      .speech-bubble{left:70%!important;top:2%!important;width:50%!important;max-width:184px!important;font-size:11px!important;padding:9px 11px!important}
+      .speech-bubble::after{left:-13px!important;bottom:8px!important;width:21px!important;height:19px!important}
+      .speech-bubble::before{left:-7px!important;bottom:11px!important;width:13px!important;height:12px!important}
       .spin-btn{min-width:116px!important;padding:11px 23px!important;font-size:16px!important}
       #cr-ranking-btn{right:8px!important;bottom:8px!important;padding:8px 10px!important;font-size:9px!important}
     }
-    @media(max-width:380px){.wheel-wrap{width:min(77vw,264px)!important}.wheel .slice-label{width:68px!important;font-size:9.6px!important}.captive{width:36%!important;max-width:96px!important;max-height:96px!important}}
+    @media(max-width:380px){.wheel-wrap{width:min(77vw,264px)!important}.wheel .slice-label{width:68px!important;font-size:9.6px!important}.captive{width:36%!important;max-width:96px!important;max-height:96px!important}.speech-bubble{left:68%!important;max-width:168px!important}}
   `;
   document.head.appendChild(style);
 
