@@ -6,8 +6,8 @@ export function initUiFixes(){
   style.textContent=`
     .wheel{background:conic-gradient(from 0deg,var(--ink) 0deg 60deg,var(--stripe-red) 60deg 120deg,var(--ink) 120deg 180deg,var(--stripe-red) 180deg 240deg,var(--ink) 240deg 300deg,var(--stripe-red) 300deg 360deg)!important}
     .pointer{top:-18px!important;font-size:31px!important;line-height:1!important;filter:drop-shadow(0 3px 3px rgba(0,0,0,.75)) drop-shadow(0 0 4px rgba(216,165,58,.45))!important}
-    .wheel .slice-label{position:absolute!important;width:82px!important;margin:0!important;text-align:center!important;font-family:'Rye',serif!important;font-size:11px!important;line-height:1.08!important;letter-spacing:0!important;white-space:normal!important;transform:translate(-50%,-50%)!important;transform-origin:center!important;writing-mode:horizontal-tb!important;z-index:3!important;pointer-events:none!important;text-shadow:0 1px 2px #000,0 0 4px rgba(0,0,0,.8)!important}
-    .captive{width:27%!important;max-width:88px!important}
+    .wheel .slice-label{position:absolute!important;width:88px!important;margin:0!important;text-align:center!important;font-family:'Rye',serif!important;font-size:12.5px!important;line-height:1.08!important;letter-spacing:0!important;white-space:normal!important;transform-origin:center!important;writing-mode:horizontal-tb!important;z-index:4!important;pointer-events:none!important;text-shadow:0 1px 2px #000,0 0 4px rgba(0,0,0,.8)!important}
+    .captive{width:36%!important;max-width:118px!important;z-index:3!important;filter:drop-shadow(0 2px 3px rgba(0,0,0,.55))!important}
 
     .clown-wrap{transform:none!important}
     .clown-img.cr-clown-hate-aura,.clown-img.cr-clown-angry-visible{transform:none!important;transform-origin:center bottom!important}
@@ -35,20 +35,30 @@ export function initUiFixes(){
 
     @media(max-width:600px){
       #screen-game3{gap:7px!important;padding-top:6px!important;padding-bottom:8px!important}
-      .wheel-wrap{width:min(76vw,276px)!important}
-      .wheel .slice-label{width:72px!important;font-size:9.5px!important;line-height:1.06!important}
-      .captive{width:25%!important;max-width:70px!important}
+      .wheel-wrap{width:min(80vw,292px)!important}
+      .wheel .slice-label{width:78px!important;font-size:11px!important;line-height:1.06!important}
+      .captive{width:34%!important;max-width:104px!important}
       .speech-bubble{left:66%!important;top:1%!important;width:51%!important;max-width:176px!important;font-size:11px!important}
       .spin-btn{min-width:116px!important;padding:11px 23px!important;font-size:16px!important}
       #cr-ranking-btn{right:8px!important;bottom:8px!important;padding:8px 10px!important;font-size:9px!important}
     }
-    @media(max-width:380px){.wheel-wrap{width:min(74vw,254px)!important}.wheel .slice-label{width:66px!important;font-size:8.8px!important}.captive{width:24%!important}}
+    @media(max-width:380px){.wheel-wrap{width:min(79vw,272px)!important}.wheel .slice-label{width:72px!important;font-size:10.2px!important}.captive{width:33%!important;max-width:94px!important}}
   `;
   document.head.appendChild(style);
 
   const names=['TICKET','TENTE DE NOVO','VOLTE AO INÍCIO','TICKET','TENTE DE NOVO','VOLTE AO INÍCIO'];
   const points=[[65.75,22.72],[81.5,50],[65.75,77.28],[34.25,77.28],[18.5,50],[34.25,22.72]];
   let raf=0;
+
+  function wheelAngle(wheel){
+    const transform=getComputedStyle(wheel).transform;
+    if(!transform||transform==='none')return 0;
+    try{
+      const m=new DOMMatrixReadOnly(transform);
+      return Math.atan2(m.b,m.a)*180/Math.PI;
+    }catch{return 0}
+  }
+
   function fixWheel(){
     cancelAnimationFrame(raf);
     raf=requestAnimationFrame(()=>{
@@ -56,20 +66,28 @@ export function initUiFixes(){
       if(!wheel)return;
       const labels=[...wheel.querySelectorAll('.slice-label')].slice(0,6);
       if(labels.length!==6)return;
+      const angle=wheelAngle(wheel);
       labels.forEach((label,i)=>{
         label.textContent=names[i];
         label.style.setProperty('left',points[i][0]+'%','important');
         label.style.setProperty('top',points[i][1]+'%','important');
         label.style.setProperty('right','auto','important');
         label.style.setProperty('bottom','auto','important');
-        label.style.setProperty('transform','translate(-50%,-50%)','important');
+        label.style.setProperty('transform',`translate(-50%,-50%) rotate(${-angle}deg)`,'important');
         label.style.removeProperty('rotate');
       });
     });
   }
+
+  function trackWheel(){
+    const active=document.querySelector('#screen-game3.active');
+    if(active)fixWheel();
+    requestAnimationFrame(trackWheel);
+  }
+
   function isFinalScreen(){return Boolean(document.querySelector('#screen-final.active,#screen-coupon.active,#screen-win.active,#screen-lose.active,#screen-closed.active,.screen.active[id*="final"],.screen.active[id*="coupon"],.screen.active[id*="win"],.screen.active[id*="lose"],.screen.active[id*="closed"]'))}
   function syncRanking(){const btn=document.getElementById('cr-ranking-btn');if(!btn)return;btn.classList.toggle('cr-ranking-final-visible',isFinalScreen())}
-  fixWheel(); syncRanking();
+  fixWheel(); syncRanking(); trackWheel();
   [80,250,700,1400].forEach(ms=>setTimeout(()=>{fixWheel();syncRanking()},ms));
   const observer=new MutationObserver(()=>{fixWheel();syncRanking()});
   observer.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['style','class']});
