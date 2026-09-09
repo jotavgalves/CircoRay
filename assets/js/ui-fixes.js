@@ -6,8 +6,8 @@ export function initUiFixes(){
   style.textContent=`
     .wheel{background:conic-gradient(from 0deg,var(--ink) 0deg 60deg,var(--stripe-red) 60deg 120deg,var(--ink) 120deg 180deg,var(--stripe-red) 180deg 240deg,var(--ink) 240deg 300deg,var(--stripe-red) 300deg 360deg)!important}
     .pointer{top:-18px!important;font-size:31px!important;line-height:1!important;filter:drop-shadow(0 3px 3px rgba(0,0,0,.75)) drop-shadow(0 0 4px rgba(216,165,58,.45))!important}
-    .wheel .slice-label{position:absolute!important;width:82px!important;margin:0!important;text-align:center!important;font-family:'Rye',serif!important;font-size:11px!important;line-height:1.08!important;letter-spacing:0!important;white-space:normal!important;transform:translate(-50%,-50%)!important;transform-origin:center!important;writing-mode:horizontal-tb!important;z-index:3!important;pointer-events:none!important;text-shadow:0 1px 2px #000,0 0 4px rgba(0,0,0,.8)!important}
-    .captive{width:27%!important;max-width:88px!important}
+    .wheel .slice-label{position:absolute!important;width:86px!important;margin:0!important;text-align:center!important;font-family:'Rye',serif!important;font-size:12px!important;line-height:1.06!important;letter-spacing:0!important;white-space:normal!important;transform:translate(-50%,-50%)!important;rotate:0deg!important;transform-origin:center!important;writing-mode:horizontal-tb!important;z-index:3!important;pointer-events:none!important;text-shadow:0 1px 2px #000,0 0 4px rgba(0,0,0,.8)!important}
+    .captive{width:42%!important;max-width:132px!important;max-height:132px!important;height:auto!important;object-fit:contain!important;z-index:4!important;filter:drop-shadow(0 2px 4px rgba(0,0,0,.55)) drop-shadow(0 0 6px rgba(0,0,0,.28))!important}
 
     .clown-wrap{transform:none!important}
     .clown-img.cr-clown-hate-aura,.clown-img.cr-clown-angry-visible{transform:none!important;transform-origin:center bottom!important}
@@ -35,14 +35,14 @@ export function initUiFixes(){
 
     @media(max-width:600px){
       #screen-game3{gap:7px!important;padding-top:6px!important;padding-bottom:8px!important}
-      .wheel-wrap{width:min(76vw,276px)!important}
-      .wheel .slice-label{width:72px!important;font-size:9.5px!important;line-height:1.06!important}
-      .captive{width:25%!important;max-width:70px!important}
+      .wheel-wrap{width:min(78vw,286px)!important}
+      .wheel .slice-label{width:74px!important;font-size:10.5px!important;line-height:1.04!important}
+      .captive{width:38%!important;max-width:108px!important;max-height:108px!important}
       .speech-bubble{left:66%!important;top:1%!important;width:51%!important;max-width:176px!important;font-size:11px!important}
       .spin-btn{min-width:116px!important;padding:11px 23px!important;font-size:16px!important}
       #cr-ranking-btn{right:8px!important;bottom:8px!important;padding:8px 10px!important;font-size:9px!important}
     }
-    @media(max-width:380px){.wheel-wrap{width:min(74vw,254px)!important}.wheel .slice-label{width:66px!important;font-size:8.8px!important}.captive{width:24%!important}}
+    @media(max-width:380px){.wheel-wrap{width:min(77vw,264px)!important}.wheel .slice-label{width:68px!important;font-size:9.6px!important}.captive{width:36%!important;max-width:96px!important;max-height:96px!important}}
   `;
   document.head.appendChild(style);
 
@@ -55,16 +55,29 @@ export function initUiFixes(){
       const wheel=document.querySelector('.wheel');
       if(!wheel)return;
       const labels=[...wheel.querySelectorAll('.slice-label')].slice(0,6);
-      if(labels.length!==6)return;
-      labels.forEach((label,i)=>{
-        label.textContent=names[i];
-        label.style.setProperty('left',points[i][0]+'%','important');
-        label.style.setProperty('top',points[i][1]+'%','important');
-        label.style.setProperty('right','auto','important');
-        label.style.setProperty('bottom','auto','important');
-        label.style.setProperty('transform','translate(-50%,-50%)','important');
-        label.style.removeProperty('rotate');
-      });
+      if(labels.length===6){
+        labels.forEach((label,i)=>{
+          label.textContent=names[i];
+          label.style.setProperty('left',points[i][0]+'%','important');
+          label.style.setProperty('top',points[i][1]+'%','important');
+          label.style.setProperty('right','auto','important');
+          label.style.setProperty('bottom','auto','important');
+          label.style.setProperty('transform','translate(-50%,-50%)','important');
+          label.style.setProperty('rotate','0deg','important');
+          label.style.setProperty('writing-mode','horizontal-tb','important');
+        });
+      }
+      const captive=wheel.querySelector('.captive')||document.querySelector('#screen-game3 .captive');
+      if(captive){
+        const narrow=window.innerWidth<=380;
+        const mobile=window.innerWidth<=600;
+        captive.style.setProperty('width',narrow?'36%':mobile?'38%':'42%','important');
+        captive.style.setProperty('max-width',narrow?'96px':mobile?'108px':'132px','important');
+        captive.style.setProperty('max-height',narrow?'96px':mobile?'108px':'132px','important');
+        captive.style.setProperty('height','auto','important');
+        captive.style.setProperty('object-fit','contain','important');
+        captive.style.setProperty('z-index','4','important');
+      }
     });
   }
   function isFinalScreen(){return Boolean(document.querySelector('#screen-final.active,#screen-coupon.active,#screen-win.active,#screen-lose.active,#screen-closed.active,.screen.active[id*="final"],.screen.active[id*="coupon"],.screen.active[id*="win"],.screen.active[id*="lose"],.screen.active[id*="closed"]'))}
@@ -73,6 +86,7 @@ export function initUiFixes(){
   [80,250,700,1400].forEach(ms=>setTimeout(()=>{fixWheel();syncRanking()},ms));
   const observer=new MutationObserver(()=>{fixWheel();syncRanking()});
   observer.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['style','class']});
+  window.addEventListener('resize',fixWheel);
   window.addEventListener('circoray:config-ready',()=>{fixWheel();syncRanking()});
   window.addEventListener('circoray:hardcore-armed',fixWheel);
   window.CIRCO_FIX_WHEEL_LABELS=fixWheel;
