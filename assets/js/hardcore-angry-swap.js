@@ -1,25 +1,23 @@
 const ANGRY_ASSET = "/assets/images/clown/clown-angry.svg";
+let normalSrc = "";
 
 function getClown() {
   return document.querySelector(".clown-img");
 }
 
-function syncClown() {
+function useAngry() {
   const clown = getClown();
   if (!clown) return;
+  if (!normalSrc) normalSrc = clown.getAttribute("src") || "";
+  if (clown.getAttribute("src") !== ANGRY_ASSET) clown.setAttribute("src", ANGRY_ASSET);
+  clown.classList.add("cr-hardcore-angry", "cr-clown-hate-aura");
+}
 
-  const hardcore = document.body.classList.contains("cr-hardcore-armed");
-
-  if (hardcore) {
-    if (!clown.dataset.crNormalSrc) clown.dataset.crNormalSrc = clown.getAttribute("src") || "";
-    if (clown.getAttribute("src") !== ANGRY_ASSET) clown.setAttribute("src", ANGRY_ASSET);
-    clown.classList.add("cr-hardcore-angry");
-    clown.setAttribute("data-hardcore-angry", "true");
-  } else if (clown.dataset.crNormalSrc) {
-    if (clown.getAttribute("src") !== clown.dataset.crNormalSrc) clown.setAttribute("src", clown.dataset.crNormalSrc);
-    clown.classList.remove("cr-hardcore-angry");
-    clown.removeAttribute("data-hardcore-angry");
-  }
+function restoreNormal() {
+  const clown = getClown();
+  if (!clown) return;
+  if (normalSrc && clown.getAttribute("src") !== normalSrc) clown.setAttribute("src", normalSrc);
+  clown.classList.remove("cr-hardcore-angry");
 }
 
 export function initHardcoreAngrySwap() {
@@ -39,14 +37,10 @@ export function initHardcoreAngrySwap() {
   `;
   document.head.appendChild(style);
 
-  syncClown();
-  window.addEventListener("circoray:hardcore-armed", syncClown);
-  window.addEventListener("circoray:hardcore-fury", syncClown);
-  window.addEventListener("circoray:config-ready", syncClown);
+  window.addEventListener("circoray:hardcore-armed", useAngry);
+  window.addEventListener("circoray:hardcore-fury", useAngry);
+  window.addEventListener("circoray:hardcore-start", useAngry);
+  window.addEventListener("circoray:hardcore-emotion-reset", restoreNormal);
 
-  const observer = new MutationObserver(syncClown);
-  observer.observe(document.body, { attributes: true, attributeFilter: ["class"], childList: true, subtree: true });
-
-  setTimeout(syncClown, 100);
-  setTimeout(syncClown, 500);
+  if (document.body.classList.contains("cr-hardcore-armed")) useAngry();
 }
