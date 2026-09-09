@@ -4,9 +4,6 @@ const DEFAULTS = {
   enabled: true,
   angerThreshold: 45,
   furyThreshold: 75,
-  initialAngerFromGrudgeMultiplier: 0.2,
-  grudgeDecayPerDay: 2,
-  angerDecayPerVisit: 12,
   chaseDurationSeconds: 14,
   chaseFuryDurationSeconds: 17,
   chaseClownSpeed: 1.0,
@@ -31,76 +28,162 @@ const state = {
   extraPips: [],
   observer: null,
   started: false,
-  cleanupGame: null
+  armed: false,
+  fury: false,
+  currentGameHardened: false
 };
 
 function clamp(n, min, max) { return Math.min(max, Math.max(min, Number(n) || 0)); }
-function readMemory() {
+
+function readPersistentMemory() {
   try {
     const raw = JSON.parse(localStorage.getItem(MEMORY_KEY) || "null");
     return raw && typeof raw === "object" ? raw : {};
   } catch { return {}; }
 }
-function saveMemory() {
-  try { localStorage.setItem(MEMORY_KEY, JSON.stringify(state.memory)); } catch {}
+
+function persistMemory() {
+  if (!state.memory) return;
+  const persistent = {
+    visits: state.memory.visits,
+    totalTaps: state.memory.totalTaps,
+    highestAnger: state.memory.highestAnger,
+    wins: state.memory.wins,
+    losses: state.memory.losses,
+    hardcoreRuns: state.memory.hardcoreRuns,
+    hardcoreWins: state.memory.hardcoreWins,
+    lastResult: state.memory.lastResult,
+    lastVisit: Date.now(),
+    anger: 0
+  };
+  try { localStorage.setItem(MEMORY_KEY, JSON.stringify(persistent)); } catch {}
+}
+
+function broadcastMemory() {
   window.dispatchEvent(new CustomEvent("circoray:clown-memory", { detail: { ...state.memory } }));
 }
+
+function saveMemory() {
+  persistMemory();
+  broadcastMemory();
+}
+
 function initMemory() {
-  const now = Date.now();
-  const prev = readMemory();
-  const last = Number(prev.lastVisit || 0);
-  const days = last ? Math.floor((now - last) / 86400000) : 0;
-  const grudge = clamp((prev.grudge || 0) - days * state.cfg.grudgeDecayPerDay, 0, 100);
-  const inheritedAnger = clamp(grudge * state.cfg.initialAngerFromGrudgeMultiplier, 0, 35);
+  const prev = readPersistentMemory();
   state.memory = {
     visits: Number(prev.visits || 0) + 1,
     totalTaps: Number(prev.totalTaps || 0),
-    anger: clamp(Math.max(inheritedAnger, Number(prev.anger || 0) - state.cfg.angerDecayPerVisit), 0, 100),
+    anger: 0,
     highestAnger: clamp(prev.highestAnger || 0, 0, 100),
-    grudge,
     wins: Number(prev.wins || 0),
     losses: Number(prev.losses || 0),
     hardcoreRuns: Number(prev.hardcoreRuns || 0),
     hardcoreWins: Number(prev.hardcoreWins || 0),
     lastResult: prev.lastResult || "",
-    lastVisit: now
+    lastVisit: Date.now()
   };
   saveMemory();
 }
-function addAnger(amount, reason = "tap") {
-  if (!state.memory) return;
-  state.memory.totalTaps += reason.includes("tap") ? 1 : 0;
-  state.memory.anger = clamp(state.memory.anger + amount, 0, 100);
-  state.memory.highestAnger = Math.max(state.memory.highestAnger, state.memory.anger);
-  if (state.memory.anger >= state.cfg.furyThreshold) state.memory.grudge = clamp(state.memory.grudge + 2, 0, 100);
-  saveMemory();
-}
-function profile() {
-  if (state.memory.anger >= state.cfg.furyThreshold) return "fury";
-  if (state.memory.anger >= state.cfg.angerThreshold) return "hardcore";
-  return "normal";
-}
+
 function say(text, ms = 2600) {
   const bubble = document.querySelector(".speech-bubble");
-  if (!bubble) return;
+  if (!bubble || !text) return;
   const p = bubble.querySelector("p") || bubble;
   p.textContent = text;
   bubble.classList.add("show");
   clearTimeout(say.timer);
   say.timer = setTimeout(() => bubble.classList.remove("show"), ms);
 }
+
+function applyArmedAtmosphere() {
+  document.body.classList.add("cr-hardcore-armed");
+  document.body.classList.toggle("cr-hardcore-fury", state.fury);
+  window.__circorayHardcoreArmed = true;
+  window.__circorayHardcoreFury = state.fury;
+  const clown = document.querySelector(".clown-img");
+  clown?.classList.add("cr-clown-hate-aura");
+}
+
+function clearArmedAtmosphere() {
+  document.body.classList.remove("cr-hardcore-armed", "cr-hardcore-fury");
+  document.querySelector(".clown-img")?.classList.remove("cr-clown-hate-aura");
+  window.__circorayHardcoreArmed = false;
+  window.__circorayHardcoreFury = false;
+}
+
+function hardenCurrentLegacyGame() {
+  if (state.currentGameHardened) return;
+  const g1Active = document.querySelector("#screen-game1.active");
+  const g2Active = document.querySelector("#screen-game2.active");
+  if (g1Active && window.g1 && Number.isFinite(Number(window.g1.timeLeft))) {
+    window.g1.timeLeft = Math.max(3, Math.ceil(Number(window.g1.timeLeft) * (state.fury ? 0.58 : 0.72)));
+    window.updateG1Timer?.();
+    state.currentGameHardened = true;
+  } else if (g2Active && window.g2 && Number.isFinite(Number(window.g2.timeLeft))) {
+    window.g2.timeLeft = Math.max(3, Math.ceil(Number(window.g2.timeLeft) * (state.fury ? 0.62 : 0.76)));
+    window.updateG2Timer?.();
+    state.currentGameHardened = true;
+  }
+}
+
+function armRun() {
+  if (state.armed) {
+    const nowFury = state.memory.anger >= state.cfg.furyThreshold;
+    if (nowFury !== state.fury) {
+      state.fury = nowFury;
+      applyArmedAtmosphere();
+    }
+    return;
+  }
+  state.armed = true;
+  state.fury = state.memory.anger >= state.cfg.furyThreshold;
+  applyArmedAtmosphere();
+  hardenCurrentLegacyGame();
+  say(state.fury ? "VOCÊ PASSOU DO LIMITE." : "AGORA FICOU SÉRIO.", 2600);
+  window.dispatchEvent(new CustomEvent("circoray:hardcore-armed", { detail: { fury: state.fury, anger: state.memory.anger } }));
+}
+
+function addAnger(amount, reason = "tap") {
+  if (!state.memory) return;
+  if (reason.includes("tap")) state.memory.totalTaps += 1;
+  state.memory.anger = clamp(state.memory.anger + amount, 0, 100);
+  state.memory.highestAnger = Math.max(state.memory.highestAnger, state.memory.anger);
+  if (state.memory.anger >= state.cfg.angerThreshold) armRun();
+  if (state.memory.anger >= state.cfg.furyThreshold && !state.fury) {
+    state.fury = true;
+    applyArmedAtmosphere();
+    window.dispatchEvent(new CustomEvent("circoray:hardcore-fury", { detail: { anger: state.memory.anger } }));
+  }
+  saveMemory();
+}
+
+function profile() {
+  if (state.memory.anger >= state.cfg.furyThreshold) return "fury";
+  if (state.memory.anger >= state.cfg.angerThreshold) return "hardcore";
+  return "normal";
+}
+
 function installStyles() {
   const style = document.createElement("style");
   style.textContent = `
+  body.cr-hardcore-armed::after{content:"";position:fixed;inset:0;z-index:9992;pointer-events:none;background:radial-gradient(circle at 50% 38%,transparent 28%,rgba(95,0,0,.18) 58%,rgba(55,0,0,.55) 100%);box-shadow:inset 0 0 80px rgba(120,0,0,.45);animation:crRunPulse 1.8s ease-in-out infinite alternate}
+  body.cr-hardcore-fury::after{background:radial-gradient(circle at 50% 38%,transparent 18%,rgba(130,0,0,.28) 52%,rgba(40,0,0,.72) 100%);animation-duration:.75s}
+  body.cr-hardcore-armed #app{filter:saturate(.86) contrast(1.06)}
+  .cr-clown-hate-aura{filter:drop-shadow(0 0 8px rgba(255,0,0,.9)) drop-shadow(0 0 22px rgba(170,0,0,.8)) drop-shadow(0 0 42px rgba(90,0,0,.7))!important;animation:crClownHate 1.15s ease-in-out infinite alternate}
+  body.cr-hardcore-fury .cr-clown-hate-aura{filter:drop-shadow(0 0 10px #ff1d1d) drop-shadow(0 0 28px #970000) drop-shadow(0 0 56px #4a0000)!important;animation-duration:.45s}
+  @keyframes crRunPulse{to{box-shadow:inset 0 0 115px rgba(170,0,0,.65);opacity:.82}}
+  @keyframes crClownHate{to{transform:scale(1.018);filter:drop-shadow(0 0 14px rgba(255,0,0,1)) drop-shadow(0 0 34px rgba(170,0,0,.9)) drop-shadow(0 0 64px rgba(90,0,0,.7))}}
   #cr-hardcore{position:fixed;inset:0;z-index:9998;background:radial-gradient(circle at 50% 10%,#3a0000 0,#120707 36%,#050303 100%);color:#f3e9d6;display:none;overflow:hidden;font-family:'Special Elite',monospace}
   #cr-hardcore.open{display:block}.crhc-wrap{height:100%;display:flex;flex-direction:column;padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom));gap:12px}.crhc-head{text-align:center}.crhc-kicker{font:700 11px 'Rye',serif;letter-spacing:.16em;color:#d8a53a}.crhc-title{font:400 clamp(24px,7vw,42px) 'Rye',serif;margin:4px 0;color:#fff;text-shadow:0 0 18px rgba(255,0,0,.45)}.crhc-sub{font-size:12px;color:#c8b9aa;margin:0}.crhc-stage{position:relative;flex:1;min-height:0;border:2px solid #5c3a20;border-radius:16px;overflow:hidden;background:#0a0605;box-shadow:inset 0 0 60px rgba(0,0,0,.8)}
   .crhc-intro{position:absolute;inset:0;display:grid;place-items:center;padding:28px;text-align:center;background:#050303;z-index:10}.crhc-intro img{width:min(220px,55vw);filter:drop-shadow(0 0 24px #7a0000)}.crhc-intro h2{font:400 clamp(25px,8vw,48px) 'Rye',serif;margin:12px 0}.crhc-intro p{max-width:420px;line-height:1.5}.crhc-btn{border:2px solid #7a0000;background:#7a0000;color:#fff;border-radius:10px;padding:12px 18px;font:700 12px 'Rye',serif;cursor:pointer;box-shadow:0 5px 0 #260000}.crhc-btn:active{transform:translateY(3px);box-shadow:0 2px 0 #260000}
-  .crhc-arena{position:absolute;inset:0;touch-action:none;background:radial-gradient(circle at 50% 50%,rgba(122,0,0,.18),transparent 55%),repeating-linear-gradient(0deg,transparent 0 28px,rgba(255,255,255,.025) 29px 30px),#0c0807}.crhc-player{position:absolute;width:34px;height:34px;border-radius:50%;background:#d8a53a;border:3px solid #fff;box-shadow:0 0 18px #d8a53a;transform:translate(-50%,-50%);z-index:3}.crhc-chaser{position:absolute;width:74px;height:74px;object-fit:contain;transform:translate(-50%,-50%);filter:drop-shadow(0 0 16px #7a0000);z-index:2;pointer-events:none}.crhc-obstacle{position:absolute;background:#2a1a0e;border:2px solid #5c3a20;border-radius:8px;box-shadow:0 8px 18px rgba(0,0,0,.45)}.crhc-hud{position:absolute;left:10px;right:10px;top:10px;display:flex;justify-content:space-between;z-index:5;font:700 11px ui-monospace,monospace}.crhc-hud b{color:#d8a53a}.crhc-danger{animation:crhcDanger .3s linear infinite alternate}@keyframes crhcDanger{to{box-shadow:inset 0 0 70px rgba(255,0,0,.35)}}
+  .crhc-arena{position:absolute;inset:0;touch-action:none;background:radial-gradient(circle at 50% 50%,rgba(122,0,0,.18),transparent 55%),repeating-linear-gradient(0deg,transparent 0 28px,rgba(255,255,255,.025) 29px 30px),#0c0807}.crhc-player{position:absolute;width:34px;height:34px;border-radius:50%;background:#d8a53a;border:3px solid #fff;box-shadow:0 0 18px #d8a53a;transform:translate(-50%,-50%);z-index:3}.crhc-chaser{position:absolute;width:78px;height:78px;object-fit:contain;transform:translate(-50%,-50%);filter:drop-shadow(0 0 18px #b00000);z-index:2;pointer-events:none}.crhc-obstacle{position:absolute;background:#2a1a0e;border:2px solid #75452a;border-radius:8px;box-shadow:0 8px 18px rgba(0,0,0,.55);z-index:4}.crhc-hud{position:absolute;left:10px;right:10px;top:10px;display:flex;justify-content:space-between;z-index:8;font:700 11px ui-monospace,monospace}.crhc-hud b{color:#d8a53a}.crhc-danger{animation:crhcDanger .3s linear infinite alternate}.crhc-dash{box-shadow:inset 0 0 100px rgba(255,0,0,.48)!important}
+  @keyframes crhcDanger{to{box-shadow:inset 0 0 70px rgba(255,0,0,.35)}}
   .crhc-door-scene{position:absolute;inset:0;padding:18px;display:grid;grid-template-rows:auto 1fr auto;gap:12px;background:linear-gradient(#0a0605,#170b08)}.crhc-entries{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:12px;min-height:0}.crhc-entry{position:relative;border:2px solid #5c3a20;background:#120b09;border-radius:14px;color:#e9ddca;font:700 13px 'Rye',serif;cursor:pointer;overflow:hidden}.crhc-entry::after{content:'';position:absolute;inset:0;background:radial-gradient(circle,rgba(216,165,58,.25),transparent 60%);opacity:0;transition:.1s}.crhc-entry.warn{border-color:#d8a53a;box-shadow:0 0 22px rgba(216,165,58,.45)}.crhc-entry.warn::after{opacity:1}.crhc-entry.fake{animation:crhcFake .18s 2}@keyframes crhcFake{50%{transform:translateX(4px)}}.crhc-entry.hit{background:#3a0000;border-color:#ff4a4a}.crhc-wave{text-align:center;font:700 12px ui-monospace,monospace}.crhc-progress{height:8px;background:#2a1a0e;border-radius:999px;overflow:hidden}.crhc-progress>i{display:block;height:100%;width:0;background:#d8a53a;transition:width .2s}.crhc-result{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;background:rgba(5,3,3,.94);z-index:20}.crhc-result h2{font:400 clamp(25px,8vw,46px) 'Rye',serif;margin:0 0 10px}.crhc-result p{max-width:420px;line-height:1.5}
   .crhc-extra-pip{filter:none!important;opacity:1!important}.crhc-extra-pip:not(.filled){filter:grayscale(1) brightness(.35)!important;opacity:.45!important}
   `;
   document.head.appendChild(style);
 }
+
 function createOverlay() {
   const root = document.createElement("div");
   root.id = "cr-hardcore";
@@ -108,6 +191,7 @@ function createOverlay() {
   document.body.appendChild(root);
   state.overlay = root;
 }
+
 function ensureExtraPips() {
   const tickets = document.querySelector(".tickets");
   if (!tickets || state.extraPips.length) return;
@@ -125,19 +209,20 @@ function firstThreeFilled() {
   const tickets = [...document.querySelectorAll(".ticket-pip:not(.crhc-extra-pip)")].slice(0, 3);
   return tickets.length >= 3 && tickets.every((t) => t.classList.contains("filled"));
 }
+
 function showIntro() {
   const stage = document.getElementById("crhc-stage");
   stage.innerHTML = `<section class="crhc-intro"><div><img src="${state.cfg.angryAsset}" alt="Palhaço irritado"><h2>${state.cfg.introLine}</h2><p>${state.cfg.hardcoreLine}</p><button class="crhc-btn" type="button">CONTINUAR</button></div></section>`;
   stage.querySelector("button").addEventListener("click", startChase, { once: true });
   say(state.cfg.introLine, 2200);
 }
+
 function triggerHardcore() {
-  if (state.active || state.complete || !state.cfg.enabled) return;
+  if (state.active || state.complete || !state.cfg.enabled || !state.armed) return;
   state.active = true;
   window.__circorayHardcoreActive = true;
   window.__circorayHardcoreComplete = false;
   state.memory.hardcoreRuns += 1;
-  state.memory.grudge = clamp(state.memory.grudge + 5, 0, 100);
   saveMemory();
   ensureExtraPips();
   state.overlay.classList.add("open");
@@ -146,106 +231,154 @@ function triggerHardcore() {
   showIntro();
   window.dispatchEvent(new CustomEvent("circoray:hardcore-start", { detail: { profile: profile(), memory: { ...state.memory } } }));
 }
+
+function circleHitsRect(x, y, radius, el) {
+  const left = el.offsetLeft, top = el.offsetTop, right = left + el.offsetWidth, bottom = top + el.offsetHeight;
+  const nearestX = clamp(x, left, right), nearestY = clamp(y, top, bottom);
+  return Math.hypot(x - nearestX, y - nearestY) < radius;
+}
+
 function startChase() {
   const stage = document.getElementById("crhc-stage");
-  const fury = profile() === "fury";
+  const fury = state.fury;
   const duration = (fury ? state.cfg.chaseFuryDurationSeconds : state.cfg.chaseDurationSeconds) * 1000;
-  const speed = (fury ? state.cfg.chaseFurySpeed : state.cfg.chaseClownSpeed) * 0.12;
-  stage.innerHTML = `<div class="crhc-arena"><div class="crhc-hud"><span>${state.cfg.chaseTitle}</span><span>RESTAM <b id="crhc-time"></b></span></div><div class="crhc-obstacle" style="left:18%;top:28%;width:22%;height:11%"></div><div class="crhc-obstacle" style="right:14%;top:53%;width:25%;height:10%"></div><div class="crhc-obstacle" style="left:35%;bottom:14%;width:18%;height:10%"></div><div class="crhc-player"></div><img class="crhc-chaser" src="${state.cfg.angryAsset}" alt=""></div>`;
+  const baseSpeed = (fury ? state.cfg.chaseFurySpeed : state.cfg.chaseClownSpeed) * 0.12;
+  stage.innerHTML = `<div class="crhc-arena"><div class="crhc-hud"><span>${state.cfg.chaseTitle}</span><span>RESTAM <b id="crhc-time"></b></span></div><div class="crhc-obstacle" style="left:10%;top:22%;width:34%;height:8%"></div><div class="crhc-obstacle" style="right:8%;top:40%;width:33%;height:8%"></div><div class="crhc-obstacle" style="left:18%;top:58%;width:30%;height:8%"></div><div class="crhc-obstacle" style="right:18%;bottom:16%;width:28%;height:8%"></div><div class="crhc-obstacle" style="left:47%;top:30%;width:8%;height:24%"></div><div class="crhc-player"></div><img class="crhc-chaser" src="${state.cfg.angryAsset}" alt=""></div>`;
   const arena = stage.querySelector(".crhc-arena");
   const player = stage.querySelector(".crhc-player");
   const chaser = stage.querySelector(".crhc-chaser");
-  let px = arena.clientWidth * .5, py = arena.clientHeight * .72;
-  let cx = arena.clientWidth * .5, cy = arena.clientHeight * .15;
+  const walls = [...stage.querySelectorAll(".crhc-obstacle")];
+  let px = arena.clientWidth * .5, py = arena.clientHeight * .82;
+  let cx = arena.clientWidth * .5, cy = arena.clientHeight * .12;
   let dead = false, start = performance.now(), last = start;
+  let dashUntil = 0, nextDashAt = start + (fury ? 2800 : 3800);
+
+  function blocked(x, y) { return walls.some((wall) => circleHitsRect(x, y, 18, wall)); }
   function position() { player.style.left = `${px}px`; player.style.top = `${py}px`; chaser.style.left = `${cx}px`; chaser.style.top = `${cy}px`; }
   function movePlayer(clientX, clientY) {
     const r = arena.getBoundingClientRect();
-    px = clamp(clientX - r.left, 18, r.width - 18); py = clamp(clientY - r.top, 18, r.height - 18); position();
+    const nx = clamp(clientX - r.left, 18, r.width - 18);
+    const ny = clamp(clientY - r.top, 18, r.height - 18);
+    if (!blocked(nx, ny)) { px = nx; py = ny; }
+    else if (!blocked(nx, py)) px = nx;
+    else if (!blocked(px, ny)) py = ny;
+    position();
   }
-  arena.addEventListener("pointerdown", e => { arena.setPointerCapture?.(e.pointerId); movePlayer(e.clientX, e.clientY); });
-  arena.addEventListener("pointermove", e => { if (e.buttons || e.pointerType === "touch") movePlayer(e.clientX, e.clientY); });
+  arena.addEventListener("pointerdown", (e) => { arena.setPointerCapture?.(e.pointerId); movePlayer(e.clientX, e.clientY); });
+  arena.addEventListener("pointermove", (e) => { if (e.buttons || e.pointerType === "touch") movePlayer(e.clientX, e.clientY); });
+
   function loop(now) {
     if (dead) return;
     const dt = Math.min(32, now - last); last = now;
+    if (now >= nextDashAt) {
+      dashUntil = now + (fury ? 850 : 650);
+      nextDashAt = now + (fury ? 3000 : 4300);
+      arena.classList.add("crhc-dash");
+      setTimeout(() => arena.classList.remove("crhc-dash"), fury ? 850 : 650);
+    }
+    const elapsedRatio = clamp((now - start) / duration, 0, 1);
+    const acceleration = 1 + elapsedRatio * (fury ? 0.7 : 0.45);
+    const dashMultiplier = now < dashUntil ? (fury ? 1.85 : 1.65) : 1;
+    const speed = baseSpeed * acceleration * dashMultiplier;
     const dx = px - cx, dy = py - cy, dist = Math.max(1, Math.hypot(dx, dy));
-    cx += dx / dist * speed * dt; cy += dy / dist * speed * dt;
+    cx += dx / dist * speed * dt;
+    cy += dy / dist * speed * dt;
     const remaining = Math.max(0, duration - (now - start));
-    stage.querySelector("#crhc-time").textContent = `${(remaining/1000).toFixed(1)}s`;
+    stage.querySelector("#crhc-time").textContent = `${(remaining / 1000).toFixed(1)}s`;
     if (dist < 48) {
       dead = true; state.memory.losses += 1; state.memory.lastResult = "hardcore-chase-lose"; addAnger(6, "loss"); saveMemory();
-      showRetry("ELE TE PEGOU.", "Você provocou. Agora corre direito.", startChase); return;
+      showRetry("ELE TE PEGOU.", "Você não atravessa paredes. Ele atravessa.", startChase); return;
     }
     if (remaining <= 0) { dead = true; fillExtra(0); startDefend(); return; }
-    if (dist < 105) arena.classList.add("crhc-danger"); else arena.classList.remove("crhc-danger");
+    if (dist < 110) arena.classList.add("crhc-danger"); else arena.classList.remove("crhc-danger");
     position(); requestAnimationFrame(loop);
   }
   position(); requestAnimationFrame(loop);
 }
+
 function startDefend() {
   const stage = document.getElementById("crhc-stage");
-  const fury = profile() === "fury";
+  const fury = state.fury;
   const totalWaves = Math.round(fury ? state.cfg.defendFuryWaves : state.cfg.defendWaves);
   const reactionMs = Number(fury ? state.cfg.defendFuryReactionMs : state.cfg.defendReactionMs);
   const entries = ["PORTA", "JANELA", "ALÇAPÃO", "VENTILAÇÃO"];
-  stage.innerHTML = `<div class="crhc-door-scene"><div><div class="crhc-wave">ONDA <b id="crhc-wave">1</b> / ${totalWaves}</div><div class="crhc-progress"><i id="crhc-progress"></i></div></div><div class="crhc-entries">${entries.map((e,i)=>`<button class="crhc-entry" data-i="${i}" type="button">${e}</button>`).join("")}</div><p style="text-align:center;margin:0;font-size:11px;color:#c8b9aa">Toque na entrada que estiver realmente ameaçada. O palhaço também cria sinais falsos.</p></div>`;
+  stage.innerHTML = `<div class="crhc-door-scene"><div><div class="crhc-wave">ONDA <b id="crhc-wave">1</b> / ${totalWaves}</div><div class="crhc-progress"><i id="crhc-progress"></i></div></div><div class="crhc-entries">${entries.map((e, i) => `<button class="crhc-entry" data-i="${i}" type="button">${e}</button>`).join("")}</div><p style="text-align:center;margin:0;font-size:11px;color:#c8b9aa">Toque na entrada realmente ameaçada. Os outros sinais podem ser mentira.</p></div>`;
   const buttons = [...stage.querySelectorAll(".crhc-entry")];
   let wave = 0, active = -1, resolved = false, timer = null;
   function nextWave() {
     if (wave >= totalWaves) { fillExtra(1); completeHardcore(); return; }
-    wave += 1; resolved = false; active = Math.floor(Math.random()*buttons.length);
-    buttons.forEach(b=>b.classList.remove("warn","fake","hit"));
-    const fakeCandidates = buttons.map((_,i)=>i).filter(i=>i!==active);
-    if (Math.random() < (fury ? .7 : .45)) {
-      const fake = fakeCandidates[Math.floor(Math.random()*fakeCandidates.length)];
-      buttons[fake].classList.add("fake");
-    }
-    setTimeout(()=>buttons[active].classList.add("warn"), 140);
+    wave += 1; resolved = false; active = Math.floor(Math.random() * buttons.length);
+    buttons.forEach((b) => b.classList.remove("warn", "fake", "hit"));
+    const fakeCandidates = buttons.map((_, i) => i).filter((i) => i !== active);
+    const fakeCount = fury && Math.random() < .45 ? 2 : (Math.random() < (fury ? .82 : .55) ? 1 : 0);
+    fakeCandidates.sort(() => Math.random() - .5).slice(0, fakeCount).forEach((i) => buttons[i].classList.add("fake"));
+    setTimeout(() => buttons[active].classList.add("warn"), 120);
     stage.querySelector("#crhc-wave").textContent = wave;
-    stage.querySelector("#crhc-progress").style.width = `${(wave/totalWaves)*100}%`;
+    stage.querySelector("#crhc-progress").style.width = `${(wave / totalWaves) * 100}%`;
     clearTimeout(timer);
-    timer = setTimeout(()=>failWave("ELE ENTROU."), reactionMs);
+    timer = setTimeout(() => failWave("ELE ENTROU."), Math.max(650, reactionMs - Math.max(0, wave - 1) * 28));
   }
   function failWave(title) {
     if (resolved) return; resolved = true; clearTimeout(timer);
     if (active >= 0) buttons[active].classList.add("hit");
-    state.memory.losses += 1; state.memory.lastResult = "hardcore-defend-lose"; addAnger(5,"loss"); saveMemory();
-    setTimeout(()=>showRetry(title, "Você hesitou. Ele não.", startDefend), 300);
+    state.memory.losses += 1; state.memory.lastResult = "hardcore-defend-lose"; addAnger(5, "loss"); saveMemory();
+    setTimeout(() => showRetry(title, "Você hesitou. Ele não.", startDefend), 300);
   }
-  buttons.forEach((button,i)=>button.addEventListener("click",()=>{
+  buttons.forEach((button, i) => button.addEventListener("click", () => {
     if (resolved) return;
-    if (i !== active) { failWave("PORTA ERRADA."); return; }
+    if (i !== active) { failWave("ENTRADA ERRADA."); return; }
     resolved = true; clearTimeout(timer); button.classList.remove("warn"); button.classList.add("hit");
-    setTimeout(nextWave, 260);
+    setTimeout(nextWave, 240);
   }));
   nextWave();
 }
+
 function showRetry(title, text, retry) {
   const stage = document.getElementById("crhc-stage");
   stage.innerHTML = `<div class="crhc-result"><div><h2>${title}</h2><p>${text}</p><button class="crhc-btn" type="button">TENTAR DE NOVO</button></div></div>`;
-  stage.querySelector("button").addEventListener("click", retry, { once:true });
+  stage.querySelector("button").addEventListener("click", retry, { once: true });
 }
+
+function endRunEmotion(result) {
+  state.memory.lastResult = result;
+  state.memory.anger = 0;
+  state.armed = false;
+  state.fury = false;
+  state.currentGameHardened = false;
+  clearArmedAtmosphere();
+  saveMemory();
+  window.dispatchEvent(new CustomEvent("circoray:hardcore-emotion-reset"));
+}
+
 function completeHardcore() {
-  state.complete = true; window.__circorayHardcoreComplete = true; window.__circorayHardcoreActive = false;
-  state.memory.hardcoreWins += 1; state.memory.wins += 1; state.memory.lastResult = "hardcore-win";
-  state.memory.anger = clamp(state.memory.anger - 18,0,100); saveMemory();
+  state.complete = true;
+  window.__circorayHardcoreComplete = true;
+  window.__circorayHardcoreActive = false;
+  state.memory.hardcoreWins += 1;
+  state.memory.wins += 1;
   const stage = document.getElementById("crhc-stage");
-  stage.innerHTML = `<div class="crhc-result"><div><img src="${state.cfg.angryAsset}" alt="" style="width:min(180px,50vw)"><h2>VOCÊ SOBREVIVEU.</h2><p>O palhaço não esqueceu. Mas desta vez você terminou os cinco jogos.</p><button class="crhc-btn" type="button">VER RESULTADO</button></div></div>`;
-  stage.querySelector("button").addEventListener("click", () => state.overlay.classList.remove("open"), { once: true });
+  stage.innerHTML = `<div class="crhc-result"><div><img src="${state.cfg.angryAsset}" alt="" style="width:min(180px,50vw)"><h2>VOCÊ SOBREVIVEU.</h2><p>A raiva acaba com esta run. A memória do que você fez, não.</p><button class="crhc-btn" type="button">VER RESULTADO</button></div></div>`;
+  stage.querySelector("button").addEventListener("click", () => {
+    state.overlay.classList.remove("open");
+    endRunEmotion("hardcore-win");
+  }, { once: true });
   window.dispatchEvent(new CustomEvent("circoray:hardcore-complete", { detail: { memory: { ...state.memory } } }));
 }
+
 function observeCompletion() {
   const check = () => {
+    state.currentGameHardened = false;
     if (state.started || !state.cfg.enabled) return;
-    if (firstThreeFilled() && state.memory.anger >= state.cfg.angerThreshold) {
+    if (firstThreeFilled() && state.armed) {
       state.started = true;
       triggerHardcore();
     }
   };
   state.observer = new MutationObserver(check);
-  state.observer.observe(document.body, { subtree:true, attributes:true, attributeFilter:["class"] });
+  state.observer.observe(document.body, { subtree: true, attributes: true, attributeFilter: ["class"] });
   check();
 }
+
 export function initHardcoreMode(config = {}) {
   if (window.__circorayHardcoreLoaded) return;
   window.__circorayHardcoreLoaded = true;
@@ -256,7 +389,16 @@ export function initHardcoreMode(config = {}) {
   }
   window.__circorayHardcoreActive = false;
   window.__circorayHardcoreComplete = false;
-  initMemory(); installStyles(); createOverlay(); observeCompletion();
+  window.__circorayHardcoreArmed = false;
+  window.__circorayHardcoreFury = false;
+  initMemory();
+  installStyles();
+  createOverlay();
+  observeCompletion();
   window.addEventListener("circoray:clown-provoked", (event) => addAnger(Number(event.detail?.amount || 0), event.detail?.reason || "tap"));
-  window.CIRCO_CLOWN_MEMORY = { get: () => ({ ...state.memory }), addAnger, reset: () => { localStorage.removeItem(MEMORY_KEY); initMemory(); } };
+  window.CIRCO_CLOWN_MEMORY = {
+    get: () => ({ ...state.memory }),
+    addAnger,
+    reset: () => { localStorage.removeItem(MEMORY_KEY); clearArmedAtmosphere(); state.armed = false; state.fury = false; initMemory(); }
+  };
 }
