@@ -52,7 +52,7 @@ async function boot() {
   initClownInteractions(config);
 
   if (!new URLSearchParams(location.search).has('test')) {
-    const { initIntroAnalytics } = await import("/assets/js/intro-analytics.js?v=20260909-4");
+    const { initIntroAnalytics } = await import("/assets/js/intro-analytics.js?v=20260909-5");
     initIntroAnalytics();
   } else {
     document.documentElement.classList.remove('cr-intro-pending');
