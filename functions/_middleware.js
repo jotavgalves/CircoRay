@@ -26,6 +26,11 @@ export async function onRequest(context) {
           element.append('<style id="admin-hidden-fix">[hidden]{display:none!important}</style>', { html: true });
         }
       })
+      .on("body", {
+        element(element) {
+          element.append('<script type="module">import { initAdminTools } from "/assets/js/admin/tools.js?v=20260909-1"; initAdminTools();</script>', { html: true });
+        }
+      })
       .transform(response);
     return secure(transformedAdmin);
   }
@@ -38,7 +43,7 @@ export async function onRequest(context) {
     .on('script[src="/assets/js/game-legacy.js"]', { element(element) { element.remove(); } })
     .on("body", {
       element(element) {
-        element.append('<script type="module" src="/assets/js/boot.js?v=20260909-8"></script>', { html: true });
+        element.append('<script type="module" src="/assets/js/boot.js?v=20260909-9"></script>', { html: true });
       }
     })
     .transform(response);
