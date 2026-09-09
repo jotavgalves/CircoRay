@@ -38,7 +38,7 @@ export async function onRequest(context) {
     .on('script[src="/assets/js/game-legacy.js"]', { element(element) { element.remove(); } })
     .on("body", {
       element(element) {
-        element.append('<script type="module" src="/assets/js/boot.js?v=20260909-7"></script>', { html: true });
+        element.append('<script type="module" src="/assets/js/boot.js?v=20260909-8"></script>', { html: true });
       }
     })
     .transform(response);

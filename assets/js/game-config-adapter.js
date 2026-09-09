@@ -30,6 +30,21 @@ function hardenedRouletteItems(items) {
   });
 }
 
+const SEGMENT_RESULT = ["TICKET", "TENTE", "VOLTE", "TICKET", "TENTE", "VOLTE"];
+let pendingWheelOutcome = "";
+
+function pickConfiguredOutcome(config) {
+  if (window.fifthTryMode) return "TICKET";
+  const source = hardenedRouletteItems(config.roulette?.outcomeItems || []);
+  const id = weightedPick(source)?.id;
+  return id === "TICKET" || id === "VOLTE" || id === "TENTE" ? id : "TENTE";
+}
+
+function indexForOutcome(outcome) {
+  const candidates = SEGMENT_RESULT.map((value, index) => value === outcome ? index : -1).filter((index) => index >= 0);
+  return candidates.length ? candidates[Math.floor(Math.random() * candidates.length)] : 0;
+}
+
 export function applyLegacyGameConfig(config) {
   if (!config) return;
   window.CIRCO_CONFIG = config;
@@ -42,13 +57,26 @@ export function applyLegacyGameConfig(config) {
     window.INTRO_LINES = { ...window.INTRO_LINES, ...config.clown.introLines };
   }
 
-  if (Array.isArray(config.roulette?.outcomeItems) && typeof window.chooseWheelOutcome === "function") {
-    window.chooseWheelOutcome = function chooseConfiguredWheelOutcome() {
-      if (window.fifthTryMode) return "TICKET";
-      const source = hardenedRouletteItems(config.roulette.outcomeItems);
-      const id = weightedPick(source)?.id;
-      return id === "TICKET" || id === "VOLTE" || id === "TENTE" ? id : "TENTE";
-    };
+  if (Array.isArray(config.roulette?.outcomeItems)) {
+    if (typeof window.chooseWheelOutcome === "function") {
+      window.chooseWheelOutcome = function chooseConfiguredWheelOutcome() {
+        if (!pendingWheelOutcome) pendingWheelOutcome = pickConfiguredOutcome(config);
+        const result = pendingWheelOutcome;
+        window.__circorayLastWheelOutcome = result;
+        window.dispatchEvent(new CustomEvent("circoray:wheel-outcome", { detail: { outcome: result } }));
+        setTimeout(() => { if (pendingWheelOutcome === result) pendingWheelOutcome = ""; }, 5500);
+        return result;
+      };
+    }
+
+    if (typeof window.chooseWheelIndex === "function") {
+      window.chooseWheelIndex = function chooseConfiguredWheelIndex() {
+        if (!pendingWheelOutcome) pendingWheelOutcome = pickConfiguredOutcome(config);
+        const index = indexForOutcome(pendingWheelOutcome);
+        window.__circorayLastWheelIndex = index;
+        return index;
+      };
+    }
   }
 
   if (typeof window.sayLine === "function") {
@@ -62,6 +90,7 @@ export function applyLegacyGameConfig(config) {
   if (typeof window.winGame === "function" && typeof window.playSfx === "function" && typeof window.goTo === "function") {
     window.winGame = function configuredWinGame(stageKey) {
       window.playSfx("sfxWin");
+      window.dispatchEvent(new CustomEvent("circoray:game-win", { detail: { stageKey } }));
       const lines = config.clown?.winLines || [];
       const line = lines.length ? lines[Math.floor(Math.random() * lines.length)] : "VOCÊ CONSEGUIU.";
       window.sayLine(line, Number(config.game?.winSpeechDurationMs || 2000));
@@ -80,6 +109,7 @@ export function applyLegacyGameConfig(config) {
       const base = Number(config.game?.game1TimeSeconds || 20);
       if (window.g1) window.g1.timeLeft = Math.max(3, Math.ceil(base * difficultyMultiplier(0.72, 0.58)));
       if (typeof window.updateG1Timer === "function") window.updateG1Timer();
+      window.dispatchEvent(new CustomEvent("circoray:game-start", { detail: { stageKey: "game1" } }));
       return result;
     };
   }
@@ -91,6 +121,7 @@ export function applyLegacyGameConfig(config) {
       const base = Number(config.game?.game2TimeSeconds || 12);
       if (window.g2) window.g2.timeLeft = Math.max(3, Math.ceil(base * difficultyMultiplier(0.76, 0.62)));
       if (typeof window.updateG2Timer === "function") window.updateG2Timer();
+      window.dispatchEvent(new CustomEvent("circoray:game-start", { detail: { stageKey: "game2" } }));
       return result;
     };
   }
