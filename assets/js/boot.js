@@ -51,9 +51,11 @@ async function boot() {
   const { initClownInteractions } = await import("/assets/js/clown-interactions.js?v=20260909-3");
   initClownInteractions(config);
 
-  const { initIntroAnalytics } = await import("/assets/js/intro-analytics.js?v=20260909-1");
-  if (!new URLSearchParams(location.search).has('test')) initIntroAnalytics();
-  else {
+  if (!new URLSearchParams(location.search).has('test')) {
+    const { initIntroAnalytics } = await import("/assets/js/intro-analytics.js?v=20260909-2");
+    initIntroAnalytics();
+  } else {
+    document.documentElement.classList.remove('cr-intro-pending');
     const { initTestController } = await import("/assets/js/test-controller.js?v=20260909-1");
     initTestController();
   }
@@ -62,6 +64,7 @@ async function boot() {
 }
 
 boot().catch((error) => {
+  document.documentElement.classList.remove('cr-intro-pending');
   console.error("Falha ao iniciar CircoRay:", error);
   if (!legacyLoaded && !window.__circorayLegacyFallbackLoaded) {
     window.__circorayLegacyFallbackLoaded = true;
