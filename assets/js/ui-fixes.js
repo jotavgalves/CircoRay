@@ -4,7 +4,7 @@ export function initUiFixes(){
 
   const style=document.createElement('style');
   style.textContent=`
-    .wheel{background:conic-gradient(from -30deg,var(--ink) 0deg 60deg,var(--stripe-red) 60deg 120deg,var(--ink) 120deg 180deg,var(--stripe-red) 180deg 240deg,var(--ink) 240deg 300deg,var(--stripe-red) 300deg 360deg)!important}
+    .wheel{background:conic-gradient(from 0deg,var(--ink) 0deg 60deg,var(--stripe-red) 60deg 120deg,var(--ink) 120deg 180deg,var(--stripe-red) 180deg 240deg,var(--ink) 240deg 300deg,var(--stripe-red) 300deg 360deg)!important}
     .pointer{top:-18px!important;font-size:31px!important;line-height:1!important;filter:drop-shadow(0 3px 3px rgba(0,0,0,.75)) drop-shadow(0 0 4px rgba(216,165,58,.45))!important}
     .wheel .slice-label{position:absolute!important;width:82px!important;margin:0!important;text-align:center!important;font-family:'Rye',serif!important;font-size:11px!important;line-height:1.08!important;letter-spacing:0!important;white-space:normal!important;transform:translate(-50%,-50%)!important;transform-origin:center!important;writing-mode:horizontal-tb!important;z-index:3!important;pointer-events:none!important;text-shadow:0 1px 2px #000,0 0 4px rgba(0,0,0,.8)!important}
     .captive{width:27%!important;max-width:88px!important}
@@ -47,7 +47,7 @@ export function initUiFixes(){
   document.head.appendChild(style);
 
   const names=['TICKET','TENTE DE NOVO','VOLTE AO INÍCIO','TICKET','TENTE DE NOVO','VOLTE AO INÍCIO'];
-  const points=[[50,18.5],[77.5,34],[77.5,66],[50,81.5],[22.5,66],[22.5,34]];
+  const points=[[65.75,22.72],[81.5,50],[65.75,77.28],[34.25,77.28],[18.5,50],[34.25,22.72]];
   let raf=0;
   function fixWheel(){
     cancelAnimationFrame(raf);
