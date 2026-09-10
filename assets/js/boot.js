@@ -75,8 +75,11 @@ async function boot() {
   const { initExperienceController } = await import("/assets/js/experience-controller.js?v=20260909-1");
   initExperienceController(config);
 
-  const { initRanking } = await import("/assets/js/ranking.js?v=20260909-2");
+  const { initRanking } = await import("/assets/js/ranking.js?v=20260910-1");
   initRanking();
+
+  const { initFinalRankingBridge } = await import("/assets/js/ranking-final-bridge.js?v=20260910-1");
+  initFinalRankingBridge();
 
   const { initClownInteractions } = await import("/assets/js/clown-interactions.js?v=20260909-3");
   initClownInteractions(config);
