@@ -60,10 +60,10 @@ async function boot() {
   const { initGameAudio } = await import("/assets/js/audio-controller.js?v=20260909-2");
   initGameAudio(config);
 
-  const { initHardcoreMode } = await import("/assets/js/hardcore-mode-v3.js?v=20260910-1");
+  const { initHardcoreMode } = await import("/assets/js/hardcore-mode-v4.js?v=20260910-1");
   initHardcoreMode(config);
 
-  const { initHardcorePolish } = await import("/assets/js/hardcore-polish.js?v=20260910-3");
+  const { initHardcorePolish } = await import("/assets/js/hardcore-polish.js?v=20260910-4");
   initHardcorePolish();
 
   const { initHardcoreAngrySwap } = await import("/assets/js/hardcore-angry-swap.js?v=20260909-3");
