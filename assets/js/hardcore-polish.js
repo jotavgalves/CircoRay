@@ -30,8 +30,6 @@ function ensureStyles(){
   .crhc-transition .crhc-btn{min-width:220px}
   .crhc-arena.crhc-double-polished .crhc-chaser:not(.clone){filter:drop-shadow(0 0 19px #770000)!important}
   .crhc-arena.crhc-double-polished .crhc-chaser.clone{filter:brightness(.78) contrast(1.08) drop-shadow(0 0 24px #ff1d1d)!important}
-  .crhc-entry.cr-delayed-true{border-color:#5c3a20!important;box-shadow:none!important;animation:none!important}
-  .crhc-entry.cr-delayed-true::after{opacity:0!important}
   `;
   document.head.appendChild(style);
 }
@@ -59,9 +57,7 @@ function polishTransition(stage){
   if(button) button.textContent='CORRER DOS DOIS';
 }
 
-function polishCopy(stage){
-  replaceExactText(stage,COPY_REPLACEMENTS);
-}
+function polishCopy(stage){replaceExactText(stage,COPY_REPLACEMENTS)}
 
 function polishDoubleArena(stage){
   const arena=stage.querySelector('.crhc-arena');
@@ -70,55 +66,6 @@ function polishDoubleArena(stage){
   if(pair.length!==2) return;
   arena.dataset.doublePolished='1';
   arena.classList.add('crhc-double-polished');
-  const separate=()=>{
-    if(!arena.isConnected) return;
-    const a=pair[0], b=pair[1];
-    const ax=parseFloat(a.style.left)||0, ay=parseFloat(a.style.top)||0;
-    const bx=parseFloat(b.style.left)||0, by=parseFloat(b.style.top)||0;
-    const d=Math.hypot(ax-bx,ay-by);
-    if(d<96){
-      const push=Math.min(38,(96-d)*.48);
-      a.style.marginLeft=`-${push}px`;
-      b.style.marginLeft=`${push}px`;
-      a.style.marginTop='-10px';
-      b.style.marginTop='10px';
-    }else{
-      a.style.marginLeft='0px'; b.style.marginLeft='0px';
-      a.style.marginTop='0px'; b.style.marginTop='0px';
-    }
-    requestAnimationFrame(separate);
-  };
-  requestAnimationFrame(separate);
-}
-
-function installDoorDelay(stage){
-  const scene=stage.querySelector('.crhc-door-scene');
-  if(!scene || scene.dataset.delayInstalled==='1') return;
-  scene.dataset.delayInstalled='1';
-  let suppress=false;
-  const observer=new MutationObserver(records=>{
-    if(suppress || !document.body.classList.contains('cr-hardcore-fury')) return;
-    for(const record of records){
-      const el=record.target;
-      if(!(el instanceof HTMLElement) || !el.classList.contains('crhc-entry')) continue;
-      if(el.classList.contains('warn') && !el.dataset.trueDelayed){
-        el.dataset.trueDelayed='1';
-        suppress=true;
-        el.classList.remove('warn');
-        el.classList.add('cr-delayed-true');
-        suppress=false;
-        setTimeout(()=>{
-          if(!el.isConnected) return;
-          suppress=true;
-          el.classList.remove('cr-delayed-true');
-          el.classList.add('warn');
-          suppress=false;
-        },150);
-      }
-      if(!el.classList.contains('warn') && !el.classList.contains('cr-delayed-true') && !el.classList.contains('near-true')) delete el.dataset.trueDelayed;
-    }
-  });
-  observer.observe(scene,{subtree:true,attributes:true,attributeFilter:['class']});
 }
 
 function installSpeechCopy(){
@@ -136,7 +83,7 @@ export function initHardcorePolish(){
   const stage=document.getElementById('crhc-stage');
   if(!stage || stage.dataset.polishObserver==='1') return;
   stage.dataset.polishObserver='1';
-  const sync=()=>{polishTransition(stage);polishCopy(stage);polishDoubleArena(stage);installDoorDelay(stage);installSpeechCopy()};
+  const sync=()=>{polishTransition(stage);polishCopy(stage);polishDoubleArena(stage);installSpeechCopy()};
   const observer=new MutationObserver(sync);
   observer.observe(stage,{childList:true,subtree:true});
   sync();
