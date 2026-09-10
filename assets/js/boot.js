@@ -18,11 +18,8 @@ async function loadPatchedLegacyGame() {
   const retryNeedle = `resultEl.textContent = "Tente novamente!";\n      playSfx("sfxLaugh");\n      sayLine(randomTaunt());\n      document.getElementById("spinBtn").disabled = false;`;
   const retryReplacement = `resultEl.textContent = "Tente novamente!";\n      playSfx("sfxLaugh");\n      sayLine(randomTaunt());\n      g3.spinning = false;\n      document.getElementById("spinBtn").disabled = false;`;
 
-  if (source.includes(retryNeedle)) {
-    source = source.replace(retryNeedle, retryReplacement);
-  } else if (!source.includes(`sayLine(randomTaunt());\n      g3.spinning = false;\n      document.getElementById("spinBtn").disabled = false;`)) {
-    throw new Error("Patch seguro da roleta não encontrou o trecho esperado em game-legacy.js");
-  }
+  if (source.includes(retryNeedle)) source = source.replace(retryNeedle, retryReplacement);
+  else if (!source.includes(`sayLine(randomTaunt());\n      g3.spinning = false;\n      document.getElementById("spinBtn").disabled = false;`)) throw new Error("Patch seguro da roleta não encontrou o trecho esperado em game-legacy.js");
 
   executeClassicSource(source, src);
 }
@@ -69,7 +66,7 @@ async function boot() {
   const { initHardcorePolish } = await import("/assets/js/hardcore-polish.js?v=20260910-4");
   initHardcorePolish();
 
-  const { initHardcoreAngrySwap } = await import("/assets/js/hardcore-angry-swap.js?v=20260910-1");
+  const { initHardcoreAngrySwap } = await import("/assets/js/hardcore-angry-swap-v2.js?v=20260910-1");
   initHardcoreAngrySwap();
 
   const { initHardcoreDiscovery } = await import("/assets/js/hardcore-discovery.js?v=20260909-3");
