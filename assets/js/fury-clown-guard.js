@@ -1,4 +1,4 @@
-const FURY_ASSET = "/assets/images/clown/clown-fury.png?v=20260910-5";
+const FURY_ASSET = "/assets/images/clown/clown-fury.png?v=20260910-6";
 let furyActive = false;
 let mainObserver = null;
 
@@ -29,17 +29,60 @@ function ensureStyles(){
       width:100%;
       height:auto;
       z-index:21;
-      pointer-events:none;
+      pointer-events:auto;
+      cursor:pointer;
+      touch-action:manipulation;
+      user-select:none;
+      -webkit-user-drag:none;
       object-fit:contain;
       object-position:center bottom;
       transform:none!important;
       transform-origin:center bottom;
       filter:drop-shadow(0 0 18px #ff1d1d) drop-shadow(0 0 42px #b00000) drop-shadow(0 0 76px #5a0000);
     }
-    body.cr-hardcore-fury #clownImg{visibility:hidden!important;opacity:0!important}
-    body.cr-hardcore-fury #clownFuryImg{display:block!important;visibility:visible!important;opacity:1!important}
+    body.cr-hardcore-fury #clownImg{visibility:hidden!important;opacity:0!important;pointer-events:none!important}
+    body.cr-hardcore-fury #clownFuryImg{display:block!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important}
   `;
   document.head.appendChild(style);
+}
+
+function proxyInteraction(fury, main){
+  if (!fury || !main || fury.dataset.interactionProxy === "1") return;
+  fury.dataset.interactionProxy = "1";
+  fury.setAttribute("role", "button");
+  fury.setAttribute("tabindex", "0");
+  fury.setAttribute("aria-label", "Tocar no palhaço");
+
+  fury.addEventListener("pointerup", (event) => {
+    if (!shouldBeFury()) return;
+    event.preventDefault();
+    event.stopPropagation();
+    try {
+      main.dispatchEvent(new PointerEvent("pointerup", {
+        bubbles: true,
+        cancelable: true,
+        pointerType: event.pointerType || "mouse",
+        clientX: event.clientX,
+        clientY: event.clientY
+      }));
+    } catch {
+      main.dispatchEvent(new Event("pointerup", {bubbles:true,cancelable:true}));
+    }
+  });
+
+  fury.addEventListener("keydown", (event) => {
+    if (!shouldBeFury() || (event.key !== "Enter" && event.key !== " ")) return;
+    event.preventDefault();
+    try {
+      main.dispatchEvent(new KeyboardEvent("keydown", {
+        key: event.key,
+        bubbles: true,
+        cancelable: true
+      }));
+    } catch {
+      main.dispatchEvent(new Event("keydown", {bubbles:true,cancelable:true}));
+    }
+  });
 }
 
 function ensureFuryImage(){
@@ -52,11 +95,11 @@ function ensureFuryImage(){
     fury = document.createElement("img");
     fury.id = "clownFuryImg";
     fury.alt = "Palhaço em modo Fúria";
-    fury.setAttribute("aria-hidden", "true");
     fury.draggable = false;
     wrap.appendChild(fury);
   }
   if (fury.getAttribute("src") !== FURY_ASSET) fury.setAttribute("src", FURY_ASSET);
+  proxyInteraction(fury, main);
   return fury;
 }
 
@@ -70,6 +113,7 @@ function applyFury(){
     fury.style.display = "block";
     fury.style.visibility = "visible";
     fury.style.opacity = "1";
+    fury.style.pointerEvents = "auto";
   }
 }
 
@@ -99,8 +143,8 @@ function reset(){
 }
 
 export function initFuryClownGuard(){
-  if (window.__circorayFuryClownGuardV2Loaded) return;
-  window.__circorayFuryClownGuardV2Loaded = true;
+  if (window.__circorayFuryClownGuardV3Loaded) return;
+  window.__circorayFuryClownGuardV3Loaded = true;
   ensureStyles();
   bindMain();
   ensureFuryImage();
