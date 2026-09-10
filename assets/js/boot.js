@@ -69,7 +69,7 @@ async function boot() {
   const { initHardcorePolish } = await import("/assets/js/hardcore-polish.js?v=20260910-4");
   initHardcorePolish();
 
-  const { initHardcoreAngrySwap } = await import("/assets/js/hardcore-angry-swap.js?v=20260910-1");
+  const { initHardcoreAngrySwap } = await import("/assets/js/hardcore-angry-swap-v2.js?v=20260910-1");
   initHardcoreAngrySwap();
 
   const { initHardcoreDiscovery } = await import("/assets/js/hardcore-discovery.js?v=20260909-3");
