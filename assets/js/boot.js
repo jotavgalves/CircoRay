@@ -63,6 +63,9 @@ async function boot() {
   const { initHardcoreMode } = await import("/assets/js/hardcore-mode-v4.js?v=20260910-1");
   initHardcoreMode(config);
 
+  const { initHardcoreIdentity } = await import("/assets/js/hardcore-identity.js?v=20260910-1");
+  initHardcoreIdentity();
+
   const { initHardcorePolish } = await import("/assets/js/hardcore-polish.js?v=20260910-4");
   initHardcorePolish();
 
