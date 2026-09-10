@@ -84,7 +84,7 @@ async function boot() {
   const { initClownInteractions } = await import("/assets/js/clown-interactions.js?v=20260909-3");
   initClownInteractions(config);
 
-  const { initFuryClownGuard } = await import("/assets/js/fury-clown-guard.js?v=20260910-2");
+  const { initFuryClownGuard } = await import("/assets/js/fury-clown-guard.js?v=20260910-3");
   initFuryClownGuard();
 
   if (!new URLSearchParams(location.search).has('test')) {
