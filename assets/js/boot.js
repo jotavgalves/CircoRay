@@ -60,7 +60,7 @@ async function boot() {
   const { initGameAudio } = await import("/assets/js/audio-controller.js?v=20260909-2");
   initGameAudio(config);
 
-  const { initHardcoreMode } = await import("/assets/js/hardcore-mode-v2.js?v=20260910-1");
+  const { initHardcoreMode } = await import("/assets/js/hardcore-mode-v3.js?v=20260910-1");
   initHardcoreMode(config);
 
   const { initHardcoreAngrySwap } = await import("/assets/js/hardcore-angry-swap.js?v=20260909-3");
@@ -83,7 +83,7 @@ async function boot() {
     initIntroAnalytics();
   } else {
     document.documentElement.classList.remove('cr-intro-pending');
-    const { initTestController } = await import("/assets/js/test-controller.js?v=20260909-1");
+    const { initTestController } = await import("/assets/js/test-controller.js?v=20260910-2");
     initTestController();
   }
 
