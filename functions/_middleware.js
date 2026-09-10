@@ -41,7 +41,12 @@ export async function onRequest(context) {
   const isTest = url.searchParams.has("test");
   let rewriter = new HTMLRewriter()
     .on('script[src="./assets/js/game-legacy.js"]', { element(element) { element.remove(); } })
-    .on('script[src="/assets/js/game-legacy.js"]', { element(element) { element.remove(); } });
+    .on('script[src="/assets/js/game-legacy.js"]', { element(element) { element.remove(); } })
+    .on("head", {
+      element(element) {
+        element.append('<style id="cr-fury-visual-force">body.cr-hardcore-fury .clown-wrap{position:absolute!important}body.cr-hardcore-fury #clownImg{opacity:0!important}body.cr-hardcore-fury .clown-wrap::before{content:"";position:absolute;inset:0;z-index:20;pointer-events:none;background:url("/assets/images/clown/clown-fury.png?v=20260910-4") center bottom/contain no-repeat;filter:drop-shadow(0 0 18px #ff1d1d) drop-shadow(0 0 44px #b00000) drop-shadow(0 0 78px #5a0000)}body.cr-hardcore-fury .clown-wrap::after{z-index:19}</style>', { html: true });
+      }
+    });
 
   if (!isTest) {
     rewriter = rewriter.on("head", {
@@ -54,7 +59,7 @@ export async function onRequest(context) {
   const transformed = rewriter
     .on("body", {
       element(element) {
-        element.append('<script type="module" src="/assets/js/boot.js?v=20260910-12"></script>', { html: true });
+        element.append('<script type="module" src="/assets/js/boot.js?v=20260910-13"></script>', { html: true });
       }
     })
     .transform(response);
