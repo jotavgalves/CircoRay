@@ -1,5 +1,4 @@
-const FURY_ASSET = "/assets/images/clown/clown-fury.png?v=20260910-2";
-const ANGRY_ASSET = "/assets/images/clown/clown-angry.svg";
+const FURY_ASSET = "/assets/images/clown/clown-fury.png?v=20260910-5";
 let furyActive = false;
 let mainObserver = null;
 
@@ -7,56 +6,110 @@ function getMainClown(){
   return document.getElementById("clownImg") || document.querySelector(".clown-img");
 }
 
+function getWrap(){
+  return getMainClown()?.closest(".clown-wrap") || document.querySelector(".clown-wrap");
+}
+
 function shouldBeFury(){
   const test = new URLSearchParams(location.search).get("test") || "";
   return furyActive || document.body.classList.contains("cr-hardcore-fury") || window.__circorayHardcoreFury === true || test.startsWith("fury");
 }
 
+function ensureStyles(){
+  if (document.getElementById("cr-fury-real-img-style")) return;
+  const style = document.createElement("style");
+  style.id = "cr-fury-real-img-style";
+  style.textContent = `
+    .clown-wrap::before{content:none!important;background:none!important}
+    #clownFuryImg{
+      display:none;
+      position:absolute;
+      left:0;
+      bottom:0;
+      width:100%;
+      height:auto;
+      z-index:21;
+      pointer-events:none;
+      object-fit:contain;
+      object-position:center bottom;
+      transform:none!important;
+      transform-origin:center bottom;
+      filter:drop-shadow(0 0 18px #ff1d1d) drop-shadow(0 0 42px #b00000) drop-shadow(0 0 76px #5a0000);
+    }
+    body.cr-hardcore-fury #clownImg{visibility:hidden!important;opacity:0!important}
+    body.cr-hardcore-fury #clownFuryImg{display:block!important;visibility:visible!important;opacity:1!important}
+  `;
+  document.head.appendChild(style);
+}
+
+function ensureFuryImage(){
+  const wrap = getWrap();
+  const main = getMainClown();
+  if (!wrap || !main) return null;
+
+  let fury = document.getElementById("clownFuryImg");
+  if (!fury) {
+    fury = document.createElement("img");
+    fury.id = "clownFuryImg";
+    fury.alt = "Palhaço em modo Fúria";
+    fury.setAttribute("aria-hidden", "true");
+    fury.draggable = false;
+    wrap.appendChild(fury);
+  }
+  if (fury.getAttribute("src") !== FURY_ASSET) fury.setAttribute("src", FURY_ASSET);
+  return fury;
+}
+
 function applyFury(){
-  const img = getMainClown();
-  if (!img || !shouldBeFury()) return;
+  if (!shouldBeFury()) return;
   furyActive = true;
-  if (img.getAttribute("src") !== FURY_ASSET) img.setAttribute("src", FURY_ASSET);
-  img.classList.add("cr-hardcore-angry","cr-clown-hate-aura","cr-fury-clown");
+  document.body.classList.add("cr-hardcore-fury");
+  ensureStyles();
+  const fury = ensureFuryImage();
+  if (fury) {
+    fury.style.display = "block";
+    fury.style.visibility = "visible";
+    fury.style.opacity = "1";
+  }
 }
 
 function bindMain(){
-  const img = getMainClown();
-  if (!img) return;
-  applyFury();
-  if (mainObserver) return;
+  const main = getMainClown();
+  if (!main || mainObserver) return;
   mainObserver = new MutationObserver(() => {
-    if (!shouldBeFury()) return;
-    const current = img.getAttribute("src") || "";
-    if (current !== FURY_ASSET) img.setAttribute("src", FURY_ASSET);
+    if (shouldBeFury()) applyFury();
   });
-  mainObserver.observe(img,{attributes:true,attributeFilter:["src"]});
+  mainObserver.observe(main,{attributes:true,attributeFilter:["src","class","style"]});
 }
 
 function activate(){
   furyActive = true;
+  ensureStyles();
   bindMain();
   applyFury();
   requestAnimationFrame(applyFury);
-  setTimeout(applyFury,40);
-  setTimeout(applyFury,120);
-  setTimeout(applyFury,300);
+  setTimeout(applyFury,50);
+  setTimeout(applyFury,180);
 }
 
 function reset(){
   furyActive = false;
+  const fury = document.getElementById("clownFuryImg");
+  if (fury) fury.style.display = "none";
 }
 
 export function initFuryClownGuard(){
-  if (window.__circorayFuryClownGuardLoaded) return;
-  window.__circorayFuryClownGuardLoaded = true;
-  window.CIRCO_FURY_CLOWN_GUARD = {activate, reset, asset:FURY_ASSET, angry:ANGRY_ASSET};
+  if (window.__circorayFuryClownGuardV2Loaded) return;
+  window.__circorayFuryClownGuardV2Loaded = true;
+  ensureStyles();
+  bindMain();
+  ensureFuryImage();
 
+  window.CIRCO_FURY_CLOWN_GUARD = {activate, reset, asset:FURY_ASSET};
   window.addEventListener("circoray:hardcore-fury", activate);
   window.addEventListener("circoray:hardcore-armed", e => { if (e?.detail?.fury === true) activate(); });
   window.addEventListener("circoray:hardcore-start", e => { if (e?.detail?.profile === "fury" || e?.detail?.fury === true) activate(); });
   window.addEventListener("circoray:hardcore-emotion-reset", reset);
 
-  bindMain();
   if (shouldBeFury()) activate();
 }
