@@ -89,6 +89,8 @@ async function boot() {
     initIntroAnalytics();
   } else {
     document.documentElement.classList.remove('cr-intro-pending');
+    const { initTestLayoutFix } = await import("/assets/js/test-layout-fix.js?v=20260910-1");
+    initTestLayoutFix();
     const { initTestController } = await import("/assets/js/test-controller.js?v=20260910-2");
     initTestController();
   }
