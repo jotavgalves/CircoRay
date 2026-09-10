@@ -48,6 +48,9 @@ async function boot() {
   const config = await configPromise;
   applyStaticPageConfig(config);
 
+  const { initSpeechProfiles } = await import("/assets/js/speech-profiles.js?v=20260910-1");
+  initSpeechProfiles();
+
   const { applyLegacyGameConfig } = await import("/assets/js/game-config-adapter.js?v=20260909-4");
   applyLegacyGameConfig(config);
 
@@ -81,10 +84,10 @@ async function boot() {
   const { initFinalRankingBridge } = await import("/assets/js/ranking-final-bridge.js?v=20260910-1");
   initFinalRankingBridge();
 
-  const { initClownInteractions } = await import("/assets/js/clown-interactions.js?v=20260909-3");
-  initClownInteractions(config);
+  const { initClownInteractions } = await import("/assets/js/clown-interactions.js?v=20260910-1");
+  initClownInteractions();
 
-  const { initFuryClownGuard } = await import("/assets/js/fury-clown-guard.js?v=20260910-3");
+  const { initFuryClownGuard } = await import("/assets/js/fury-clown-guard.js?v=20260910-4");
   initFuryClownGuard();
 
   if (!new URLSearchParams(location.search).has('test')) {
