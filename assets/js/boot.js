@@ -63,7 +63,7 @@ async function boot() {
   const { initHardcoreMode } = await import("/assets/js/hardcore-mode-v4.js?v=20260910-1");
   initHardcoreMode(config);
 
-  const { initMobileChaseInput } = await import("/assets/js/mobile-chase-input.js?v=20260910-1");
+  const { initMobileChaseInput } = await import("/assets/js/mobile-chase-input.js?v=20260910-2");
   initMobileChaseInput();
 
   const { initHardcoreIdentity } = await import("/assets/js/hardcore-identity.js?v=20260910-1");
