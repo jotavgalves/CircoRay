@@ -61,6 +61,12 @@ function installStyles(){
       -webkit-touch-callout:none!important;
     }
     .crhc-player,.crhc-obstacle,.crhc-chaser,.crhc-hud{pointer-events:none!important}
+    @media (max-width:600px){
+      .crhc-arena .crhc-obstacle[style*="bottom:16%"]{
+        right:5%!important;
+        width:22%!important;
+      }
+    }
   `;
   document.head.appendChild(style);
 }
