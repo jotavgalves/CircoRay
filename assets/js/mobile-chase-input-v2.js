@@ -61,10 +61,35 @@ function installStyles(){
       -webkit-touch-callout:none!important;
     }
     .crhc-player,.crhc-obstacle,.crhc-chaser,.crhc-hud{pointer-events:none!important}
+
     @media (max-width:600px){
+      /* Mobile usa uma geometria própria. O raio lógico da bolinha é 18px,
+         então os corredores precisam ter folga real, não só percentual. */
+      .crhc-arena .crhc-obstacle[style*="left:10%"]{
+        left:6%!important;
+        width:27%!important;
+        height:6%!important;
+      }
+      .crhc-arena .crhc-obstacle[style*="right:8%"]{
+        right:5%!important;
+        width:27%!important;
+        height:6%!important;
+      }
+      .crhc-arena .crhc-obstacle[style*="left:18%"]{
+        left:8%!important;
+        width:25%!important;
+        height:6%!important;
+      }
       .crhc-arena .crhc-obstacle[style*="bottom:16%"]{
         right:5%!important;
-        width:22%!important;
+        width:20%!important;
+        height:6%!important;
+      }
+      .crhc-arena .crhc-obstacle[style*="left:47%"]{
+        left:46%!important;
+        width:6%!important;
+        height:20%!important;
+        top:31%!important;
       }
     }
   `;
